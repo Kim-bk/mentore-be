@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "mssql2": {
+      "restored": true,
+      "restoreTime": "2022-12-07T10:10:12.6556045Z"
+    },
+    "mssql1": {
+      "restored": true,
+      "restoreTime": "2022-12-07T11:11:07.0180917Z"
+    },
+    "identityapp1": {
+      "restored": true,
+      "restoreTime": "2022-12-07T10:10:21.5858314Z"
+    }
+  },
+  "parameters": {
+    "mssql1.subscriptionId": {
+      "Name": "mssql1.subscriptionId",
+      "Type": "subscription",
+      "Value": "5507461d-da99-487c-af46-992aa00efe72"
+    },
+    "mssql1.resourceGroupName": {
+      "Name": "mssql1.resourceGroupName",
+      "Type": "resourceGroup",
+      "Value": "commerce-2clothy"
+    }
+  }
+}
