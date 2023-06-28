@@ -22,13 +22,12 @@ namespace Mentore.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : Controller
+    public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
         private readonly RefreshTokenGenerator _refreshTokenGenerator;
         private readonly IPermissionService _permissionService;
-        private readonly IBankService _bankService;
         private readonly IMentorService _mentorService;
         private readonly ILocationRepository _locationRepo;
         private readonly IUnitOfWork _unitOfWork;
@@ -39,11 +38,9 @@ namespace Mentore.Controllers
         public UserController(IUserService userService
             , IAuthService authService
             , RefreshTokenGenerator refreshTokenGenerator, IPermissionService permissionService
-            , IBankService bankService
             , IMentorService mentorService
             , ILocationRepository locationRepo
             , IMentorRepository mentorRepo
-            , IMentorPositionRepository mentorPositionRepository
             , IFieldRepository fieldRepo
             , IEntityFieldRepository entityFieldRepository
             , IUnitOfWork unitOfWork)
@@ -52,7 +49,6 @@ namespace Mentore.Controllers
             _authService = authService;
             _refreshTokenGenerator = refreshTokenGenerator;
             _permissionService = permissionService;
-            _bankService = bankService;
             _mentorService = mentorService;
             _locationRepo = locationRepo;
             _fieldRepo = fieldRepo;
@@ -73,6 +69,7 @@ namespace Mentore.Controllers
 
             return BadRequest(rs.ErrorMessage);
         }
+        #region Import Data
 
         [AllowAnonymous]
         [HttpGet("field")]
@@ -118,7 +115,7 @@ namespace Mentore.Controllers
                 "Khởi nghiệp"
             };
 
-            foreach(var opt in options)
+            foreach (var opt in options)
             {
                 var field = new Field
                 {
@@ -167,7 +164,7 @@ namespace Mentore.Controllers
         [HttpGet("import")]
         public async Task<List<Mentor>> ImportMentorData()
         {
-           
+
             using (StreamReader r = new("mentor_data.json"))
             {
                 Random random = new Random();
@@ -175,7 +172,7 @@ namespace Mentore.Controllers
                 List<MentorData> mentorData = JsonConvert.DeserializeObject<List<MentorData>>(json);
                 List<Mentor> mentors = new();
                 List<Field> fields = await _fieldRepo.GetAll();
-                   
+
                 foreach (var data in mentorData)
                 {
                     var index = random.Next(1, 36);
@@ -209,7 +206,7 @@ namespace Mentore.Controllers
                         await _entityFieldRepository.AddAsync(mentorField);
                         await _unitOfWork.CommitTransaction();
                     }
-                    catch 
+                    catch
                     {
                         var location = await _locationRepo.FindAsync(_ => _.Name == GetRandomProvince());
                         var mentor = new Mentor
@@ -218,7 +215,7 @@ namespace Mentore.Controllers
                             Avatar = data.Avatar,
                             Description = data.Description,
                             CurrentJob = data.Job,
-                            Location = await _locationRepo.FindAsync(_ => _.Name == GetRandomProvince()),
+                            LocationId = (await _locationRepo.FindAsync(_ => _.Name == GetRandomProvince())).Id,
                             PhoneNumber = GetRandomPhoneNumber(),
                             BirthDate = RandomBirthDate(),
                             Email = RandomEmail(),
@@ -243,7 +240,7 @@ namespace Mentore.Controllers
             }
         }
 
-        private DateTime RandomBirthDate() 
+        private DateTime RandomBirthDate()
         {
             Random random = new Random();
             int year = random.Next(1980, 1996);  // Generate a random year between 1980 and 1995
@@ -308,6 +305,7 @@ namespace Mentore.Controllers
 
             return phoneNumber;
         }
+        #endregion
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -438,79 +436,6 @@ namespace Mentore.Controllers
                 return Ok("Cập nhật người dùng thành công!");
             }
             return BadRequest(rs.ErrorMessage);
-        }
-
-        #region Bank
-
-        [Authorize]
-        [HttpPost("bank")]
-        public async Task<IActionResult> AddBank([FromBody] BankRequest request)
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var rs = await _bankService.AddBank(request, userId);
-            if (rs.IsSuccess)
-            {
-                return Ok("Thêm thẻ ngân hàng thành công!");
-            }
-            return BadRequest(rs.ErrorMessage);
-        }
-
-        [Authorize]
-        [HttpGet("bank")]
-        public async Task<IActionResult> GetBank()
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var rs = await _bankService.GetBanksByUser(userId);
-            if (rs.IsSuccess)
-            {
-                return Ok(rs.UserBanks);
-            }
-
-            return BadRequest(rs.ErrorMessage);
-        }
-
-        [Authorize]
-        [HttpPut("bank")]
-        public async Task<IActionResult> UpdateBank([FromBody] BankRequest request)
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var rs = await _bankService.UpdateBank(request, userId);
-            if (rs.IsSuccess)
-            {
-                return Ok("Cập nhật thẻ ngân hàng thành công!");
-            }
-            return BadRequest(rs.ErrorMessage);
-        }
-
-        #endregion Bank
-
-   /*     [Authorize]
-        [HttpGet("order")]
-        public async Task<IActionResult> GetOrders()
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var rs = await _userService.GetOrders(userId);
-            if (rs.IsSuccess)
-            {
-                return Ok(rs.Orders);
-            }
-            return BadRequest(rs.ErrorMessage);
-        }
-*/
-      /*  [Authorize]
-        [HttpGet("transaction")]
-        public async Task<List<TransactionResponse>> GetTransactions()
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            return await _userService.GetTransactions(userId);
-        }*/
-
-        [Authorize]
-        [HttpGet("wallet")]
-        public async Task<int> GetUserWallet()
-        {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            return await _userService.GetAccountWallet(userId);
         }
     }
 }

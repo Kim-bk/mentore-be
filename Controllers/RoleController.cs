@@ -11,7 +11,7 @@ namespace Mentore.Controllers
     [Permission("MANAGE_PERMISSION")]
     [Route("api/[controller]")]
     [ApiController]
-    public class RoleController : Controller
+    public class RoleController : ControllerBase
     {
         private readonly IRoleService _roleService;
         public RoleController(IRoleService roleService)

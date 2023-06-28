@@ -1,4 +1,5 @@
 using API.Model.DTOs;
+using API.Model.Entities;
 using AutoMapper;
 using DAL.Entities;
 using Mentore.Models;
@@ -13,8 +14,13 @@ namespace Mentore.Services.Mapping
         {
             CreateMap<Account, UserDTO>();
             CreateMap<UserGroup, UserGroupDTO>();
-            CreateMap<Mentor, MentorDTO>().ReverseMap();
+            CreateMap<Mentor, MentorDTO>()
+                .ForMember(_ => _.BirthDate, opt => opt.Ignore())
+                .ForMember(_ => _.Experiences, opt => opt.Ignore())
+                .ForMember(_ => _.Fields, opt => opt.Ignore())
+                .ReverseMap();
             CreateMap<Post, PostDTO>().ReverseMap();
+            CreateMap<Workshop, WorkshopDTO>().ReverseMap();
         }
     }
 }

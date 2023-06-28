@@ -11,8 +11,8 @@ using Mentore.Models.DTOs.Responses;
 using Mentore.Services.Base;
 using Mentore.Services.Interfaces;
 using API.Model.DAL.Interfaces;
-using Castle.Core.Internal;
-using DAL.Entities;
+using API.Model.Entities;
+using API.Services;
 
 namespace Mentore.Services
 {
@@ -25,10 +25,12 @@ namespace Mentore.Services
         private readonly Encryptor _encryptor;
         private readonly IEmailSender _emailSender;
         private readonly IMapper _map;
+        private readonly UploadImageService _uploadImageService;
 
         public UserService(IUserRepository userRepo, IUnitOfWork unitOfWork, Encryptor encryptor
             , IEmailSender emailSender, IMapperCustom mapper
             , IRefreshTokenRepository refreshTokenRepossitory, IMapper map
+            , UploadImageService uploadImageService
             , IMentorRepository mentorRepo, IMenteeRepository menteeRepo) : base(unitOfWork, mapper)
         {
             _userRepo = userRepo;
@@ -38,6 +40,7 @@ namespace Mentore.Services
             _menteeRepo = menteeRepo;
             _mentorRepo = mentorRepo;
             _map = map;
+            _uploadImageService = uploadImageService;
         }
 
         public async Task<UserResponse> FindById(string userId)
@@ -175,12 +178,12 @@ namespace Mentore.Services
             };
         }
 
-        public async Task<UserResponse> Register(RegistRequest req)
+        public async Task<UserResponse> Register(RegistRequest req, bool isCreateMentor = false)
         {
             try
             {
                 // 1. Check if duplicated account created
-                var getUser = await _userRepo.FindAsync(us => us.Email == req.Email && us.IsActivated == true);
+                var getUser = await _userRepo.FindAsync(us => us.Email == req.Email);
 
                 if (getUser != null)
                 {
@@ -206,12 +209,11 @@ namespace Mentore.Services
                 // 3. Create new account
                 var user = new Account
                 {
-                    Name = req.Name,
                     Email = req.Email,
                     IsActivated = false,
                     ActivationCode = Guid.NewGuid(),
                     DateCreated = DateTime.UtcNow.Date,
-                    //UserGroupId = 2,  // CUSTOMER
+                    UserGroupId = isCreateMentor ? "MENTOR" : "MENTEE",
 
                     // 4. Encrypt password
                     Password = _encryptor.MD5Hash(req.Password),
@@ -219,9 +221,23 @@ namespace Mentore.Services
 
                 // 5. Add user
                 await _userRepo.AddAsync(user);
+
+                // 6. Create mentee info
+                if (!isCreateMentor)
+                {
+                    var mentee = new Mentee
+                    {
+                        Name = req.Name,
+                        BirthDate = req.BirthDate,
+                        Avatar = "https://ui-avatars.com/api/?name=" + req.Name.ToLower().Trim()
+                    };
+
+                    await _menteeRepo.AddAsync(mentee);
+                }    
+
                 await _unitOfWork.CommitTransaction();
 
-                // 6. Send an email activation
+                // 7. Send an email activation
                 await _emailSender.SendEmailVerificationAsync(user.Email, user.ActivationCode.ToString(), "verify-account");
 
                 return new UserResponse
@@ -293,10 +309,10 @@ namespace Mentore.Services
                 await _unitOfWork.BeginTransaction();
 
                 // Mentor
-                if (userReq.UserGroupId == "User")
+                if (userReq.UserGroupId == "MENTOR")
                     UpdateMentorInfo(req, idAccount);
 
-                if (userReq.UserGroupId == "Mentor")
+                if (userReq.UserGroupId == "MENTEE")
                     UpdateMenteeInfo(req, idAccount);
 
                 await _unitOfWork.CommitTransaction();
@@ -321,12 +337,12 @@ namespace Mentore.Services
             var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == idAccount);
 
             mentor.Name = model.Name;
-            mentor.CV = model.CV;
             mentor.PhoneNumber = model.PhoneNumber;
             mentor.CurrentJob = model.CurrentJob;
-            mentor.Address = model.Address;
             mentor.BirthDate = model.BirthDate;
             mentor.Description = model.Description;
+            if (model.Avatar != null)
+                mentor.Avatar = _uploadImageService.UploadFile(model.Avatar);
 
             _mentorRepo.Update(mentor);
         }
@@ -337,20 +353,14 @@ namespace Mentore.Services
 
             mentee.Name = model.Name;
             mentee.PhoneNumber = model.PhoneNumber;
-            mentee.StudyAt = model.CurrentJob;
+            mentee.StudyAt = model.StudyAt;
             mentee.Address = model.Address;
             mentee.BirthDate = model.BirthDate;
             mentee.Description = model.Description;
+            if (model.Avatar != null)
+                mentee.Avatar = _uploadImageService.UploadFile(model.Avatar);
 
             _menteeRepo.Update(mentee);
-        }
-
-        public async Task<int> GetAccountWallet(string userId)
-        {
-            var user = await _userRepo.FindAsync(us => us.Id == userId);
-            var wallet = user.Wallet.HasValue == false ? 0 : user.Wallet.Value;
-            return wallet;
-            
-        }
+        }     
     }
 }

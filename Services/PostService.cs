@@ -28,32 +28,18 @@ namespace API.Services
     {
         private readonly IPostRepository _postRepo;
         private readonly IMapper _mapper;
-
-        #region Image vs Video extensions
-        private readonly List<string> ImageExtensions = new() { ".png", ".jpg", ".jpeg" };
-        private readonly List<string> VideoExtensions = new() { ".mp4", "m4p", ".m4v", ".mpg", ".mpeg", ".m2v", ".mov" };
-        #endregion
-
-        #region Cloudinary Informations
-
-        private const string CLOUD_NAME = "dor7ghk95";
-        private const string API_KEY = "588273259994552";
-        private const string API_SECRET = "YImi-iuUxclgZJFC2-R0cN3tcEA";
-
-        #endregion
-
-        private Cloudinary _cloudinary;
-        private readonly IWebHostEnvironment _webHostEnviroment;
+        private readonly UploadImageService _uploadImageService;
 
         public PostService(IPostRepository postRepo,
             IMapperCustom map,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            IWebHostEnvironment webHostEnvironment) : base(unitOfWork, map)
+            IWebHostEnvironment webHostEnvironment,
+            UploadImageService uploadImageService) : base(unitOfWork, map)
         {
             _postRepo = postRepo;
             _mapper = mapper;
-            _webHostEnviroment = webHostEnvironment;
+            _uploadImageService = uploadImageService;
         }
 
         public async Task<bool> CreatePost(PostRequest post, string userId)
@@ -65,7 +51,7 @@ namespace API.Services
 
                 var newPost = new Post()
                 {
-                    Title = post.Title,
+                    Title = post.Title.ToUpper(),
                     Content = post.Content,
                     AccountId = userId,
                     IsAccepted = false,
@@ -73,22 +59,12 @@ namespace API.Services
 
                 if (post.File != null)
                 {
-                    Account account = new(CLOUD_NAME, API_KEY, API_SECRET);
-                    _cloudinary = new Cloudinary(account);
-                    var fileUrl = UploadFile(post.File);
-
+                    var fileUrl = _uploadImageService.UploadFile(post.File);
                     if (fileUrl == string.Empty)
                         return false;
 
                     newPost.FileUrl = fileUrl;
-                    newPost.IsContainVideo = false;
                 }
-
-                if (!post.VideoUrl.IsNullOrEmpty() && IsValidYouTubeUrl(post.VideoUrl))
-                {
-                    newPost.VideoUrl = post.VideoUrl;
-                    newPost.IsContainVideo = true;
-                }    
 
                 await _unitOfWork.BeginTransaction();
                 await _postRepo.AddAsync(newPost);
@@ -165,102 +141,34 @@ namespace API.Services
             return duration + " phút trước.";
         }
 
-        public async Task<bool> UpdatePost(PostRequest post, string postId)
+        public async Task<Post> UpdatePost(PostRequest post, string postId)
         {
             try
             {
-                var findPost = await _postRepo.FindAsync(p => p.Id == postId && p.IsAccepted);
+                var findPost = await _postRepo.FindAsync(p => p.Id == postId && !p.IsDeleted);
                 if (findPost == null)
-                    return false;
+                    return null;
 
                 if (post.File != null)
                 {
-                    Account account = new(CLOUD_NAME, API_KEY, API_SECRET);
-                    _cloudinary = new Cloudinary(account);
-                    var fileUrl = UploadFile(post.File);
-
-                    if (fileUrl.IsNullOrEmpty()) return false;
+                    var fileUrl = _uploadImageService.UploadFile(post.File);
+                    if (fileUrl.IsNullOrEmpty()) return null;
 
                     findPost.FileUrl = fileUrl;
-                    findPost.IsContainVideo = false;
                 }
 
-                if (!post.VideoUrl.IsNullOrEmpty() && IsValidYouTubeUrl(post.VideoUrl))
-                {
-                    findPost.VideoUrl = post.VideoUrl;
-                    findPost.IsContainVideo = true;
-                }
-
-                findPost.Title = post.Title ?? findPost.Title;
+                findPost.Title = post.Title.ToUpper() ?? findPost.Title.ToUpper();
                 findPost.Content = post.Content ?? findPost.Content;
                 findPost.UpdatedAt = DateTime.Now;
 
                 _postRepo.Update(findPost);
                 await _unitOfWork.CommitTransaction();
-                return true;
+                return findPost;
             }
             catch (Exception)
             {
                 throw;
             }
-        }
-
-        private string UploadFile(IFormFile file)
-        {
-            try
-            {
-                var fileUrl = "";
-                if (!Directory.Exists(_webHostEnviroment.WebRootPath + "\\Images\\"))
-                {
-                    Directory.CreateDirectory(_webHostEnviroment.WebRootPath + "\\Images\\");
-                }
-
-                using (FileStream fileStream = System.IO.File.Create(_webHostEnviroment.WebRootPath + "\\Images\\" + file.FileName))
-                {
-                    file.CopyTo(fileStream);
-                    fileStream.Flush();
-                    fileUrl = _webHostEnviroment.WebRootPath + "\\Images\\" + file.FileName;
-                }
-
-                if (fileUrl == "")
-                    return string.Empty;
-
-                string extension = Path.GetExtension(file.FileName).ToLower();
-                if (ImageExtensions.Contains(extension))
-                {
-                    var uploadParams = new ImageUploadParams
-                    {
-                        File = new FileDescription(fileUrl),
-                    };
-
-                    var uploadResult = _cloudinary.Upload(uploadParams);
-                    return uploadResult.Url.ToString();
-                }
-
-                else
-                {
-                    return string.Empty;
-                }
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        private static bool IsValidYouTubeUrl(string url)
-        {
-            // Regular expression pattern to match YouTube video URLs
-            string pattern = @"^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+";
-
-            // Create a Regex object with the pattern
-            Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
-
-            // Check if the given URL matches the pattern
-            Match match = regex.Match(url);
-
-            // Return true if there is a match, indicating a valid YouTube video URL
-            return match.Success;
         }
 
         public async Task<PostDTO> GetPostById(string postId)

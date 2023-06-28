@@ -9,7 +9,7 @@ namespace Mentore.Services
     {
         public Task<UserResponse> Login(LoginRequest req);
 
-        public Task<UserResponse> Register(RegistRequest req);
+        public Task<UserResponse> Register(RegistRequest req, bool isCreateMentor = false);
 
         public Task<UserResponse> UpdateUser(UserRequest req, string idAccount);
 
@@ -23,10 +23,7 @@ namespace Mentore.Services
 
         public Task<UserResponse> FindById(string userId);
 
-       // public Task<OrderResponse> GetOrders(string userId);
-
         public Task<bool> Logout(string userId);
 
-        public Task<int> GetAccountWallet(string userId);
     }
 }

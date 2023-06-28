@@ -12,7 +12,7 @@ namespace Mentore.Controllers
     [Permission("MANAGE_PERMISSION")]
     [Route("api/[controller]")]
     [ApiController]
-    public class PermissionController : Controller
+    public class PermissionController : ControllerBase
     {
         private readonly IPermissionService _permissionService;
         public PermissionController(IPermissionService permissionService)

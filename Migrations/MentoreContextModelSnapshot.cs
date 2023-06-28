@@ -22,6 +22,19 @@ namespace API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("API.Model.Entities.Counter", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("Value")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Counter");
+                });
+
             modelBuilder.Entity("API.Model.Entities.EntityField", b =>
                 {
                     b.Property<string>("Id")
@@ -53,6 +66,37 @@ namespace API.Migrations
                     b.HasIndex("FieldId");
 
                     b.ToTable("EntityField");
+                });
+
+            modelBuilder.Entity("API.Model.Entities.Experience", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Company")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Job")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MentorId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Year")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Experience");
                 });
 
             modelBuilder.Entity("API.Model.Entities.Location", b =>
@@ -88,6 +132,9 @@ namespace API.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Avatar")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
 
@@ -95,6 +142,9 @@ namespace API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
@@ -119,7 +169,7 @@ namespace API.Migrations
                     b.ToTable("Mentee");
                 });
 
-            modelBuilder.Entity("DAL.Entities.Appointment", b =>
+            modelBuilder.Entity("API.Model.Entities.SpeakerWorkshop", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -127,17 +177,79 @@ namespace API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndTime")
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MentorId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("WorkshopId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpeakerWorkshop");
+                });
+
+            modelBuilder.Entity("API.Model.Entities.UserWorkshop", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvitationCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActived")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("MentorId")
-                        .HasColumnType("int");
+                    b.Property<string>("MenteeId")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("StartTime")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("WorkshopId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserWorkshop");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Appointment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Detail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MentorId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TimeStart")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
@@ -145,62 +257,9 @@ namespace API.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("accountId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Appointment");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Comment", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("accountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("postId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Comment");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Conversation", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastMessage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Coversation");
                 });
 
             modelBuilder.Entity("DAL.Entities.Field", b =>
@@ -231,9 +290,6 @@ namespace API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("AccountId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Avatar")
@@ -241,9 +297,6 @@ namespace API.Migrations
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("CV")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -257,17 +310,11 @@ namespace API.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Experience")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LocationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LocationId1")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("LocationId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -280,105 +327,7 @@ namespace API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("LocationId1");
-
                     b.ToTable("Mentor");
-                });
-
-            modelBuilder.Entity("DAL.Entities.MentorPosition", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MentorFieldId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MentorFieldId1")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MentorFieldId1");
-
-                    b.ToTable("MentorPosition");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Message", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConversationId1")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SenderId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId1");
-
-                    b.ToTable("Message");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Participant", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("accountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Participant");
                 });
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
@@ -404,9 +353,6 @@ namespace API.Migrations
                     b.Property<bool>("IsAccepted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsContainVideo")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -419,40 +365,9 @@ namespace API.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Post");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Transaction", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MenteeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("WorkShopId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Transaction");
                 });
 
             modelBuilder.Entity("DAL.Entities.Workshop", b =>
@@ -460,16 +375,13 @@ namespace API.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Anttendees")
+                    b.Property<int>("Attendees")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
+                    b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Image")
@@ -478,11 +390,11 @@ namespace API.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LocationId")
-                        .HasColumnType("int");
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LocationId1")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Participated")
+                        .HasColumnType("int");
 
                     b.Property<int>("Price")
                         .HasColumnType("int");
@@ -490,12 +402,16 @@ namespace API.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Time")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LocationId1");
 
                     b.ToTable("Workshop");
                 });
@@ -524,9 +440,6 @@ namespace API.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -539,9 +452,6 @@ namespace API.Migrations
 
                     b.Property<string>("UserGroupId")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<int?>("Wallet")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -580,72 +490,6 @@ namespace API.Migrations
                     b.HasIndex("UserGroupId");
 
                     b.ToTable("Credential");
-                });
-
-            modelBuilder.Entity("Mentore.Models.Entities.Bank", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AccountId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AccountName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BankNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BankTypeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ExpiredDate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("StartedDate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("BankTypeId");
-
-                    b.ToTable("Bank");
-                });
-
-            modelBuilder.Entity("Mentore.Models.Entities.BankType", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("BankCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BankName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BankType");
                 });
 
             modelBuilder.Entity("Mentore.Models.Payment", b =>
@@ -753,48 +597,6 @@ namespace API.Migrations
                     b.Navigation("Account");
                 });
 
-            modelBuilder.Entity("DAL.Entities.Mentor", b =>
-                {
-                    b.HasOne("Mentore.Models.Account", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId");
-
-                    b.HasOne("API.Model.Entities.Location", "Location")
-                        .WithMany()
-                        .HasForeignKey("LocationId1");
-
-                    b.Navigation("Account");
-
-                    b.Navigation("Location");
-                });
-
-            modelBuilder.Entity("DAL.Entities.MentorPosition", b =>
-                {
-                    b.HasOne("API.Model.Entities.EntityField", "MentorField")
-                        .WithMany()
-                        .HasForeignKey("MentorFieldId1");
-
-                    b.Navigation("MentorField");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Message", b =>
-                {
-                    b.HasOne("DAL.Entities.Conversation", "Conversation")
-                        .WithMany()
-                        .HasForeignKey("ConversationId1");
-
-                    b.Navigation("Conversation");
-                });
-
-            modelBuilder.Entity("DAL.Entities.Workshop", b =>
-                {
-                    b.HasOne("API.Model.Entities.Location", "Location")
-                        .WithMany()
-                        .HasForeignKey("LocationId1");
-
-                    b.Navigation("Location");
-                });
-
             modelBuilder.Entity("Mentore.Models.Account", b =>
                 {
                     b.HasOne("Mentore.Models.UserGroup", null)
@@ -817,21 +619,6 @@ namespace API.Migrations
                     b.Navigation("UserGroup");
                 });
 
-            modelBuilder.Entity("Mentore.Models.Entities.Bank", b =>
-                {
-                    b.HasOne("Mentore.Models.Account", "Account")
-                        .WithMany("Banks")
-                        .HasForeignKey("AccountId");
-
-                    b.HasOne("Mentore.Models.Entities.BankType", "BankType")
-                        .WithMany()
-                        .HasForeignKey("BankTypeId");
-
-                    b.Navigation("Account");
-
-                    b.Navigation("BankType");
-                });
-
             modelBuilder.Entity("Mentore.Models.RefreshToken", b =>
                 {
                     b.HasOne("Mentore.Models.Account", "User")
@@ -839,11 +626,6 @@ namespace API.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Mentore.Models.Account", b =>
-                {
-                    b.Navigation("Banks");
                 });
 
             modelBuilder.Entity("Mentore.Models.UserGroup", b =>

@@ -1,13 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Mentore.Models.DTOs.Requests
 {
     public class RegistRequest
     {
         public string Name { get; set; }
-
+        public DateTime BirthDate { get; set; }
         public string Email { get; set; }
-
         public string Password { get; set; }
 
         /* [RegularExpression("/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8}/g",

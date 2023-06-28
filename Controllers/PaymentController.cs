@@ -5,8 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
+using API.Model.DTOs.Requests;
 
 namespace Mentore.Controllers
 {
@@ -22,29 +21,19 @@ namespace Mentore.Controllers
             _paymentService = paymentService;
         }
 
+        [Authorize]
         [HttpPost("vnpay")]
-        public async Task<IActionResult> VNPayCheckOut(OrderRequest request)
+        public async Task<IActionResult> VNPayCheckOut(WorkshopRequest request)
         {
             try
             {
+                //var userId = "1228baed-55dc-4dce-8cee-bcaf634ca96a";
                 var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var result = await _paymentService.VNPayCheckOut(request, userId);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
-        }
+                var (mesage, isSuccess) = await _paymentService.VNPayCheckOut(request, userId, HttpContext);
+                if (!isSuccess)
+                    return BadRequest(mesage);
 
-        [HttpPost("cod")]
-        public async Task<IActionResult> CODCheckOut(OrderRequest request)
-        {
-            try
-            {
-                var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var result = await _paymentService.CODCheckOut(request, userId);
-                return Ok(result);
+                return Ok(mesage);
             }
             catch (Exception e)
             {
@@ -53,19 +42,14 @@ namespace Mentore.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("success")]
-        //api/payment/success
-        public async Task<IActionResult> PaymentSuccess([FromQuery] string vnp_OrderInfo)
+        [HttpGet("call-back")]
+        public async Task<IActionResult> PaymentSuccess()
         {
-            var rs = await _paymentService.PaySuccess(vnp_OrderInfo);
+            var rs = await _paymentService.PaySuccess(Request.Query);
             if (rs)
-            {
-                return Redirect("https://2clothy.vercel.app/completedpayment");
-            }
-            else
-                return BadRequest("Thanh toán thất bại !");
-
-             
+                return Redirect("http://localhost:8080");
+         
+            return BadRequest("Thanh toán thất bại !");
         }
     }
 }

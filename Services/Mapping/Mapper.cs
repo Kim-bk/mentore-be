@@ -25,8 +25,6 @@ namespace Mentore.Services.Mapping
                 {
                     Id = u.Id,
                     Email = u.Email,
-                    DateCreated = u.DateCreated,
-                    Name = u.Name,
                     UserGroupId = u.UserGroupId,
                 };
                 listUser.Add(user);

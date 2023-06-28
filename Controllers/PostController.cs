@@ -1,6 +1,7 @@
 ﻿using API.Model.DTOs;
 using API.Model.DTOs.Requests;
 using API.Services.Interfaces;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -13,7 +14,7 @@ namespace API.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class PostController : Controller
+    public class PostController : ControllerBase
     {
         private readonly IPostService _postService;
         public PostController(IPostService postService)
@@ -54,8 +55,8 @@ namespace API.Controllers
            return await _postService.CreatePost(post, userId);
         }
 
-        [HttpPut("id")]
-        public async Task<bool> UpdatePost([FromForm] PostRequest post, string id)
+        [HttpPut("{id}")]
+        public async Task<Post> UpdatePost(string id, [FromForm] PostRequest post)
         {
             return await _postService.UpdatePost(post, id);
         }

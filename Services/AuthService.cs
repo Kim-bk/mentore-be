@@ -75,7 +75,6 @@ namespace Mentore.Services
                     IsSuccess = true,
                     AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
                     RefreshToken = refreshTokenHandler,
-                    Wallet = user.Wallet.HasValue == false ? 0 : user.Wallet.Value,
                     UserId = user.Id
                 };
             }

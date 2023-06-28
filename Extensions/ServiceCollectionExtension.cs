@@ -16,7 +16,6 @@ using API.Services;
 using API.Services.Interfaces;
 using API.Model.DAL.Interfaces;
 using API.Model.DAL.Repositories;
-using DAL.Entities;
 
 namespace Mentore.Extensions
 {
@@ -29,7 +28,6 @@ namespace Mentore.Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
             services.Configure<VNPaySettings>(configuration.GetSection("VNPaySettings"));
-
             return services;
         }
 
@@ -42,20 +40,17 @@ namespace Mentore.Extensions
                 .AddScoped<IRefreshTokenRepository, refreshTokenRepo>()
                 .AddScoped<IUserGroupRepository, UserGroupRepository>()
                 .AddScoped<ICredentialRepository, CredentialRepository>()
-                .AddScoped<IBankRepository, BankRepository>()
                 .AddScoped<IMentorRepository, MentorRepository>()
                 .AddScoped<IMenteeRepository, MenteeRepository>()
-                .AddScoped<IMessageRepository, MessageRepository>()
                 .AddScoped<IPostRepository, PostRepository>()
-                .AddScoped<IMentorPositionRepository, MentorPositionRepository>()
-                .AddScoped<IMessageRepository, MessageRepository>()
                 .AddScoped<IWorkshopRepository, WorkshopRepository>()
-                .AddScoped<ICommentRepository, CommentRepository>()
                 .AddScoped<ILocationRepository, LocationRepository>()
                 .AddScoped<IFieldRepository, FieldRepository>()
-                .AddScoped<ITransactionRepository, TransactionRepository>()
                 .AddScoped<IEntityFieldRepository, EntityFieldRepository>()
-                .AddScoped<IBankTypeRepository, BankTypeRepository>();
+                .AddScoped<IAppointmentRepository, AppointmentRepository>()
+                .AddScoped<IExperienceRepository, ExperienceRepository>()
+                .AddScoped<ISpeakerWorkshopRepository, SpeakerWorkshopRepository>()
+                .AddScoped<IUserWorkshopRepository, UserWorkshopRepository>();
         }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
@@ -63,23 +58,23 @@ namespace Mentore.Extensions
             return services
                 .AddScoped<Encryptor>()
                 .AddScoped<AccessTokenGenerator>()
+                .AddScoped<UploadImageService>()
                 .AddScoped<RefreshTokenGenerator>()
                 .AddScoped<RefreshTokenValidator>()
                 .AddScoped<TokenGenerator>()
                 .AddScoped<IEmailSender, EmailSender>()
                 .AddScoped<IUserService, UserService>()
-                .AddScoped<ICategoryService, CategoryService>()
                 .AddScoped<IMapperCustom, Mapper>()
-                .AddScoped<IImageService, ImageService>()
                 .AddScoped<IPermissionService, PermissionService>()
                 .AddScoped<IRoleService, RoleService>()
                 .AddScoped<IUserGroupService, UserGroupService>()
                 .AddScoped<IAuthService, AuthService>()
-                .AddScoped<IBankService, BankService>()
                 .AddScoped<IPaymentService, PaymentService>()
                 .AddScoped<IAdminService, AdminService>()
                 .AddScoped<IPostService, PostService>()
-                .AddScoped<IMentorService, MentorService>();
+                .AddScoped<IMentorService, MentorService>()
+                .AddScoped<IWorkshopService, WorkshopService>()
+                .AddScoped<IAppointmentService, AppointmentService>();
         }
     }
 }

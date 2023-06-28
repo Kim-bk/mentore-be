@@ -5,6 +5,9 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System;
+using System.Net.Sockets;
+using System.Linq;
+using API.Model.DTOs.Responses;
 
 namespace Mentore.Commons.VNPay
 {
@@ -29,6 +32,47 @@ namespace Mentore.Commons.VNPay
             {
                 _responseData.Add(key, value);
             }
+        }
+
+        public PaymentResponse GetFullResponseData(IQueryCollection collection, string hashSecret)
+        {
+            var vnPay = new VNPayLibrary();
+
+            foreach (var (key, value) in collection)
+            {
+                if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+                {
+                    vnPay.AddResponseData(key, value);
+                }
+            }
+
+            var userWorkshopId = Convert.ToInt64(vnPay.GetResponseData("vnp_TxnRef"));
+            var vnPayTranId = Convert.ToInt64(vnPay.GetResponseData("vnp_TransactionNo"));
+            var vnpResponseCode = vnPay.GetResponseData("vnp_ResponseCode");
+            var vnpSecureHash = collection.FirstOrDefault(k => k.Key == "vnp_SecureHash").Value; //hash của dữ liệu trả về
+            var orderInfo = vnPay.GetResponseData("vnp_OrderInfo");
+            var amount = vnPay.GetResponseData("vnp_Amount");
+
+            var checkSignature =
+                vnPay.ValidateSignature(vnpSecureHash, hashSecret); //check Signature
+
+            if (!checkSignature)
+                return new PaymentResponse
+                {
+                    IsSuccess = false,
+                    Message = "Payment failure!"
+                };
+
+            return new PaymentResponse
+            {
+                IsSuccess = true,
+                OrderInfo = orderInfo,
+                UserWorkshopId = userWorkshopId.ToString(),
+                Token = vnpSecureHash,
+                VnPayResponseCode = vnpResponseCode,
+                Amount = amount,
+                Message = "Payment success!"
+            };
         }
 
         public string GetResponseData(string key)
@@ -135,23 +179,32 @@ namespace Mentore.Commons.VNPay
 
             return hash.ToString();
         }
-        public static string GetIpAddress(IHttpContextAccessor context)
+        public static string GetIpAddress(HttpContext context)
         {
-            string ipAddress;
+            var ipAddress = string.Empty;
             try
             {
+                var remoteIpAddress = context.Connection.RemoteIpAddress;
 
-                ipAddress = context.HttpContext.GetServerVariable("HTTP_X_FORWARDED_FOR");
+                if (remoteIpAddress != null)
+                {
+                    if (remoteIpAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                    {
+                        remoteIpAddress = Dns.GetHostEntry(remoteIpAddress).AddressList
+                            .FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+                    }
 
-                if (string.IsNullOrEmpty(ipAddress) || (ipAddress.ToLower() == "unknown") || ipAddress.Length > 45)
-                    ipAddress = context.HttpContext.GetServerVariable("REMOTE_ADDR");
+                    if (remoteIpAddress != null) ipAddress = remoteIpAddress.ToString();
+
+                    return ipAddress;
+                }
             }
             catch (Exception ex)
             {
-                ipAddress = "Invalid IP:" + ex.Message;
+                return ex.Message;
             }
 
-            return ipAddress;
+            return "127.0.0.1";
         }
     }
 

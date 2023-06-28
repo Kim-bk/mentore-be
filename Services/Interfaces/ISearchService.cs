@@ -8,6 +8,6 @@ namespace Mentore.Services.Interfaces
 {
     public interface ISearchService
     {
-        public Task<List<ItemDTO>> SearchItem(string searchContent);
+        //public Task<List<ItemDTO>> SearchItem(string searchContent);
     }
 }

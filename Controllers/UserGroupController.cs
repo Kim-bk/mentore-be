@@ -11,7 +11,7 @@ namespace Mentore.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Permission("MANAGE_PERMISSION")]
-    public class UserGroupController : Controller
+    public class UserGroupController : ControllerBase
     {
         private readonly IUserGroupService _userGroupService;
 

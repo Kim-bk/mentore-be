@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.Services.Interfaces;
 using API.Model.DTOs;
+using Mentore.Models.DTOs.Responses;
+using API.Model.DTOs.Requests;
 
 namespace API.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class MentorController : Controller
+    public class MentorController : ControllerBase
     {
         private readonly IMentorService _mentorService;
 
@@ -18,6 +20,14 @@ namespace API.Controllers
         {
             _mentorService = mentorService;
         }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<UserResponse> Register([FromForm] MentorRequest model)
+        {
+            return await _mentorService.Register(model);
+        }
+
 
         [AllowAnonymous]
         [HttpGet]
