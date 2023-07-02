@@ -29,10 +29,21 @@ namespace API.Controllers
         }
 
         [HttpGet("user")]
-        public async Task<List<Appointment>> GetUserAppointmens()
+        public async Task<List<Appointment>> GetUserAppointments()
         {
             var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            return _appointmentService.GetUserAppointment(userId);
+            return await _appointmentService.GetUserAppointment(userId);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("verify")]
+        public async Task<IActionResult> VerifyAppointment([FromQuery] string code)
+        {
+            var verifyAppointment = await _appointmentService.VerifyAppointment(code);
+            if (!verifyAppointment) 
+                return BadRequest("Xác nhận lịch hẹn thất bại!");
+
+            return Ok("Bạn đã xác nhận lịch hẹn thành công! Vào tài khoản trên Mentore để kiểm tra lịch hẹn");
         }
 
         [HttpPost]

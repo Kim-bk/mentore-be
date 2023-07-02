@@ -1,121 +1,87 @@
 ﻿using Mentore.Models.DTOs.Responses.Base;
 using Mentore.Models;
 using System.Threading.Tasks;
-using System;
 using Mentore.Services.Interfaces;
 using Mentore.Models.DAL.Interfaces;
 using Mentore.Services.Base;
 using Mentore.Models.DAL;
-using Mentore.Models.DTOs.Requests;
+using System.Collections.Generic;
+using Mentore.Models.DAL.Repositories;
+using System.Linq;
 
 namespace Mentore.Services
 {
     public class RoleService : BaseService, IRoleService
     {
         private readonly IRoleRepository _roleRepo;
+        private readonly IUserRepository _userRepo;
         public RoleService(IRoleRepository roleRepository, IUnitOfWork unitOfWork
-                    , IMapperCustom mapper) : base(unitOfWork, mapper)
+                    , IMapperCustom mapper, IUserRepository userRepo) : base(unitOfWork, mapper)
         {
             _roleRepo = roleRepository;
+            _userRepo = userRepo;
         }
 
         public async Task<GeneralResponse> CreateRole(string roleName)
         {
-            try
+            var listRole = new List<Role>();
+            var newRole = new Role 
             {
-                // 1. Validate 
-                if (String.IsNullOrEmpty(roleName))
-                {
-                    return new GeneralResponse
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = "Cú pháp không hợp lệ !"
-                    };
-                }
+                Name = "CREATE_WORKSHOP", 
+                IsDeleted = false,
+                UserGroupId = "ADMIN"
+            };
+            listRole.Add(newRole);
 
-                var role = await _roleRepo.FindAsync(r => r.Name == roleName);
-                if (role != null && role.IsDeleted == true)
-                {
-                    role.IsDeleted = false;
-                    return new GeneralResponse
-                    {
-                        IsSuccess = true,
-                    };
-                }
-                else
-                {
-                    var newRole = new Role { Name = roleName, IsDeleted = false };
-                    await _roleRepo.AddAsync(newRole);
-                    await _unitOfWork.CommitTransaction();
-                    return new GeneralResponse
-                    {
-                        IsSuccess = true,
-                    };
-                }
-              
-            }
-            catch (Exception e)
+            var newRole1 = new Role
             {
-                return new GeneralResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = e.Message
-                };
-            }
+                Name = "UPDATE_WORKSHOP",
+                IsDeleted = false,
+                UserGroupId = "ADMIN"
+            };
+            listRole.Add(newRole1);
+
+            var newRole2 = new Role
+            {
+                Name = "ACCEPT_POST",
+                IsDeleted = false,
+                UserGroupId = "ADMIN"
+            };
+            listRole.Add(newRole2);
+
+            var newRole3 = new Role
+            {
+                Name = "DELETE_POST",
+                IsDeleted = false,
+                UserGroupId = "ADMIN"
+            };
+            listRole.Add(newRole3);
+
+            var newRole4 = new Role
+            {
+                Name = "DELETE_WORKSHOP",
+                IsDeleted = false,
+                UserGroupId = "ADMIN"
+            };
+            listRole.Add(newRole4);
+
+
+            await _roleRepo.AddRangeAsync(listRole);
+            await _unitOfWork.CommitTransaction();
+            return new GeneralResponse
+            {
+                IsSuccess = true,
+            };
         }
 
-        public async Task<GeneralResponse> DeleteRole(string roleId)
+        public async Task<string> GetCredentials(string userId)
         {
-            try
-            {
-                var role = await _roleRepo.FindAsync(r => r.Id == roleId && r.IsDeleted == false);
-                role.IsDeleted = true;
-                await _unitOfWork.CommitTransaction();
-                return new GeneralResponse
-                {
-                    IsSuccess = true,
-                };
-            }
-            catch (Exception e)
-            {
-                return new GeneralResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = e.Message
-                };
-            }
-        }
+            // 1. Get User Group Id of user
+            var groupUserId = (await _userRepo.FindAsync(us => us.Id == userId)).UserGroupId;
 
-        public async Task<GeneralResponse> UpdateRole(RoleRequest req)
-        {
-            try
-            {
-                // 1. Find role by Id
-                var role = await _roleRepo.FindAsync(r => r.Id == req.RoleId && r.IsDeleted == false);
-
-                // 2. Check
-                if (role == null)
-                {
-                    throw new ArgumentNullException("Can't find role !");
-                }
-
-                // 3. Update
-                role.Name = req.Name;
-                _roleRepo.Update(role);
-                await _unitOfWork.CommitTransaction();
-                return new GeneralResponse
-                {
-                    IsSuccess = true,
-                };
-            }
-            catch (Exception e)
-            {
-                return new GeneralResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = e.Message
-                };
-            }
+            // 2. Get credentials of user
+            List<string> listCredentials = _roleRepo.GetQuery(_ =>_.UserGroupId == groupUserId).Select(_ => _.Name).ToList();
+            return string.Join(",", listCredentials.ToArray());
         }
     }
 }

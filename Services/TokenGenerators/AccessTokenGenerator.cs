@@ -30,7 +30,7 @@ namespace Mentore.Services.TokenGenerators
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:AccessTokenSecret"]));
             var issuer = _configuration["AuthSettings:Issuer"];
             var audience = _configuration["AuthSettings:Audience"];
-            var expires = DateTime.UtcNow.AddHours(3); // expires in 3 hours later
+            var expires = DateTime.UtcNow.AddHours(24); // expires in 24 hours later
             var token = _tokenGenerator.GenerateToken(key, issuer, audience, expires, claims);
             return token;
         }

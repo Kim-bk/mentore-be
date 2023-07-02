@@ -3,6 +3,7 @@ using API.Model.DTOs.Requests;
 using API.Services.Interfaces;
 using Castle.Core.Internal;
 using DAL.Entities;
+using Mentore.Commons.CustomAttribute;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -27,24 +28,59 @@ namespace API.Controllers
         [HttpGet]
         public async Task<List<WorkshopDTO>> GetWorkShops()
         {
-            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            if (userId.IsNullOrEmpty())
-                return await _workshopService.GetAllWorkshops();
+            return await _workshopService.GetAllWorkshops();
 
-            return null;
-           // return await _workshopService.GetUserWorkshops(userId);
         }
 
+        [HttpGet("mentee")]
+        public async Task<List<WorkshopDTO>> GetMenteeWorkShops()
+        {
+            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return await _workshopService.GetMenteeWorkshops(userId);
+
+        }
+
+        [HttpGet("mentor")]
+        public async Task<List<WorkshopDTO>> GetMentorWorkShops()
+        {
+            var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return await _workshopService.GetMentorWorkshops(userId);
+        }
+
+        //[Permission("CREATE_WORKSHOP")]
+        [AllowAnonymous]
+        [HttpGet("admin")]
+        public async Task<List<WorkshopDTO>> GetAdminWorkShops()
+        {
+            return await _workshopService.GetAllWorkshops();
+        }
+
+       // [Permission("CREATE_WORKSHOP")]
         [HttpPost]
         public async Task<Workshop> CreateWorkshop([FromForm] WorkshopRequest model)
         {
             return await _workshopService.CreateWorkshop(model);
         }
 
-        [HttpPut("id")]
-        public async Task<Workshop> UpdateWorkshop([FromForm] WorkshopRequest model, [FromQuery] string id)
+       // [Permission("UPDATE_WORKSHOP")]
+        [HttpPut("{id}")]
+        public async Task<Workshop> UpdateWorkshop(string id, [FromForm] WorkshopRequest model)
         {
             return await _workshopService.UpdateWorkshop(model, id);
+        }
+
+       // [Permission("CREATE_WORKSHOP")]
+        [HttpGet("{id}")]
+        public async Task<WorkshopDTO> GetWorkshop(string id)
+        {
+            return await _workshopService.GetWorkshop(id);
+        }
+
+      //  [Permission("DELETE_WORKSHOP")]
+        [HttpDelete("{id}")]
+        public async Task<List<WorkshopDTO>> DeleteWorkshop(string id)
+        {
+            return await _workshopService.DeleteWorkshop(id);
         }
     }
 }

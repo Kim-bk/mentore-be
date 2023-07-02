@@ -34,9 +34,6 @@ namespace Mentore.Services
         {
             try
             {
-                // Pre-handle user shop ID null
-                //string userShopId = user.ShopId == null ? "-1" : user.ShopId.ToString();
-
                 // 1. Generate access vs refresh token
                var accessToken = _accessTokenGenerator.Generate(user, listCredentials);
                 var refreshToken = _refreshTokenGenerator.Generate();
@@ -57,18 +54,6 @@ namespace Mentore.Services
                 await _unitOfWork.CommitTransaction();
 
                 // 5. Return two tokens (AccessToken vs RefreshToken vs ShopId vs Wallet)
-                //int shopId = Convert.ToString(userShopId);
-
-                // 6. Return wallet according to shop account and custome account
-                if (userGroup == "Shop")
-                {
-                    return new TokenResponse()
-                    {
-                        IsSuccess = true,
-                        AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
-                        RefreshToken = refreshTokenHandler,
-                    };
-                }
 
                 return new TokenResponse()
                 {

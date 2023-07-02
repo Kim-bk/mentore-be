@@ -8,6 +8,7 @@ using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using DAL.Entities;
+using Mentore.Models;
 using Mentore.Models.DAL;
 using Mentore.Models.DAL.Repositories;
 using Mentore.Services.Base;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -28,18 +30,27 @@ namespace API.Services
     {
         private readonly IPostRepository _postRepo;
         private readonly IMapper _mapper;
+        private readonly IMenteeRepository _menteeRepo;
+        private readonly IMentorRepository _mentorRepo;
+        private readonly IUserRepository _userRepo;
         private readonly UploadImageService _uploadImageService;
 
         public PostService(IPostRepository postRepo,
             IMapperCustom map,
             IUnitOfWork unitOfWork,
             IMapper mapper,
+            IMenteeRepository menteeRepo,
+            IMentorRepository mentorRepo,
+            IUserRepository userRepo,
             IWebHostEnvironment webHostEnvironment,
             UploadImageService uploadImageService) : base(unitOfWork, map)
         {
             _postRepo = postRepo;
             _mapper = mapper;
             _uploadImageService = uploadImageService;
+            _menteeRepo = menteeRepo;
+            _mentorRepo = mentorRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<bool> CreatePost(PostRequest post, string userId)
@@ -95,10 +106,15 @@ namespace API.Services
         public async Task<List<PostDTO>> GetAllPosts()
         {
             var listPosts = new List<PostDTO>();
-            var showedPosts = await _postRepo.GetShowedPost();
-            foreach (var post in showedPosts)
+            var showedPosts = await _postRepo.GetAll();
+            foreach (var post in showedPosts.Where(_ => !_.IsDeleted && _.IsAccepted)
+                                            .OrderByDescending(_ => _.CreatedAt))
             {
+                var (userFullName, avatar) = await GetUserFullNameAndAvatar(post.AccountId);
+
                 var postDTO = _mapper.Map<PostDTO>(post);
+                postDTO.UserFullName = userFullName;
+                postDTO.Avatar = avatar;
                 postDTO.Time = GetDurationPosted(postDTO.CreatedAt);
                 listPosts.Add(postDTO);
             }
@@ -106,14 +122,38 @@ namespace API.Services
             return listPosts;
         }
 
+        private async Task<(string, string)> GetUserFullNameAndAvatar(string userId)
+        {
+            string userFullName, avatar;
+            var userGroup = (await _userRepo.FindAsync(_ => _.Id == userId)).UserGroupId;
+            if (userGroup == "MENTEE")
+            {
+                var info = await _menteeRepo.FindAsync(_ => _.AccountId == userId);
+                userFullName = info.Name;
+                avatar = info.Avatar;
+            }
+            else
+            {
+                var info = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
+                userFullName = info.Name;
+                avatar = info.Avatar;
+            }
+
+            return (userFullName, avatar);
+        }
+
         public async Task<List<PostDTO>> GetUserPosts(string userId)
         {
             var listPosts = new List<PostDTO>();
             var userPosts = await _postRepo.GetQuery(_ => _.AccountId == userId && !_.IsDeleted).ToListAsync();
-            foreach (var post in userPosts.OrderByDescending(_ => _.CreatedAt))
+            var (userFullName, avatar) = await GetUserFullNameAndAvatar(userId);
+
+            foreach (var post in userPosts.OrderByDescending(_ => _.IsAccepted))
             {
                 var postDTO = _mapper.Map<PostDTO>(post);
                 postDTO.Time = GetDurationPosted(postDTO.CreatedAt);
+                postDTO.UserFullName = userFullName;
+                postDTO.Avatar = avatar;
                 listPosts.Add(postDTO);
             }
 

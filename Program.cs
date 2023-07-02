@@ -1,13 +1,9 @@
 using Mentore;
 using Mentore.Models;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Stripe;
-using System;
-
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +13,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       builder =>
                       {
-                          builder.WithOrigins("http://localhost:8080", "http://192.168.1.9:8080", "http://localhost:8000/")
+                          builder.WithOrigins("http://localhost:8080"
+                              , "http://192.168.1.9:8080"
+                              , "http://localhost:8000/"
+                              , "http://localhost:41783")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowAnyOrigin();

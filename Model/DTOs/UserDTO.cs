@@ -8,5 +8,6 @@ namespace Mentore.Models.DTOs
         public string Email { get; set; }
         public string Name { get; set; }
         public string UserGroupId { get; set; }
+        public string Avatar { get; set; }
     }
 }

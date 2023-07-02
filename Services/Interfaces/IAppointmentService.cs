@@ -10,7 +10,8 @@ namespace API.Services.Interfaces
         public List<Appointment> GetMentorAppointments(string mentorId);
         public Task<Appointment> CreateAppointment(AppointmentDTO model, string accountId);
         public Task<Appointment> UpdateAppointment(AppointmentDTO model, string appointmentId);
-        public List<Appointment> GetUserAppointment(string accountId);
+        public Task<List<Appointment>> GetUserAppointment(string accountId);
         public Task<bool> DeleteAppointment(string appointmentId);
+        public Task<bool> VerifyAppointment(string code);
     }
 }

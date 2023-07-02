@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace Mentore.Controllers
 {
-    [Authorize]
-    [Permission("MANAGE_PERMISSION")]
     [Route("api/[controller]")]
     [ApiController]
     public class RoleController : ControllerBase
@@ -21,41 +19,15 @@ namespace Mentore.Controllers
 
         [HttpPost]
         // api/role
-        public async Task<IActionResult> CreateRole([FromBody] string roleName)
+        public async Task<IActionResult> CreateRole()
         {
-            var rs = await _roleService.CreateRole(roleName);
+            var rs = await _roleService.CreateRole("random");
             if (!rs.IsSuccess)
             {
                 return BadRequest(rs.ErrorMessage);
             }
 
-            return Ok("Creata role " + roleName + " success !");
-        }
-
-        [HttpPut]
-        // api/role
-        public async Task<IActionResult> UpdateRole(RoleRequest req)
-        {
-            var rs = await _roleService.UpdateRole(req);
-            if (!rs.IsSuccess)
-            {
-                return BadRequest(rs.ErrorMessage);
-            }
-
-            return Ok("Update success !");
-        }
-
-        [HttpDelete("{roleId:int}")]
-        // api/role/{roleId}
-        public async Task<IActionResult> DeleteRole(string roleId)
-        {
-            var rs = await _roleService.DeleteRole(roleId);
-            if (!rs.IsSuccess)
-            {
-                return BadRequest(rs.ErrorMessage);
-            }
-
-            return Ok("Delete success !");
+            return Ok("Creata role success !");
         }
     }
 }

@@ -31,7 +31,8 @@ namespace Mentore.Services
             , IEmailSender emailSender, IMapperCustom mapper
             , IRefreshTokenRepository refreshTokenRepossitory, IMapper map
             , UploadImageService uploadImageService
-            , IMentorRepository mentorRepo, IMenteeRepository menteeRepo) : base(unitOfWork, mapper)
+            , IMenteeRepository menteeRepo
+            , IMentorRepository mentorRepo) : base(unitOfWork, mapper)
         {
             _userRepo = userRepo;
             _encryptor = encryptor;
@@ -48,12 +49,36 @@ namespace Mentore.Services
             try
             {
                 var user = await _userRepo.FindAsync(us => us.Id == userId);
-                var userDTO = _map.Map<Account, UserDTO>(user);
-                return new UserResponse
+                if (user.UserGroupId == "MENTEE")
                 {
-                    IsSuccess = true,
-                    UserDTO = userDTO
-                };
+                    var menteeInfo = await _menteeRepo.FindAsync(_ => _.AccountId == userId);
+                    var infoReturn = new UserDTO
+                    {
+                        Avatar = menteeInfo.Avatar,
+                        Email = menteeInfo.Email,
+                    };
+
+                    return new UserResponse
+                    {
+                        IsSuccess = true,
+                        UserDTO = infoReturn
+                    };
+                }
+                else
+                {
+                    var mentorInfo = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
+                    var infoReturn = new UserDTO
+                    {
+                        Avatar = mentorInfo.Avatar,
+                        Email = mentorInfo.Email,
+                    };
+
+                    return new UserResponse
+                    {
+                        IsSuccess = true,
+                        UserDTO = infoReturn
+                    };
+                }
             }
             catch (Exception e)
             {
@@ -139,7 +164,7 @@ namespace Mentore.Services
         public async Task<UserResponse> Login(LoginRequest req)
         {
             // 1. Find user by user name
-            var user = await _userRepo.FindAsync(us => us.Email == req.Email);
+            var user = await _userRepo.FindAsync(us => us.Email == req.Email && us.UserGroupId != "ADMIN");
 
             // 2. Check if user exist
             if (user == null)

@@ -1,11 +1,11 @@
 using System;
 using Mentore.Models.DTOs.Settings;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MailKit.Security;
 using System.Threading.Tasks;
-using CloudinaryDotNet;
+using API.Model.DTOs;
+using System.Collections.Generic;
 
 namespace Mentore.Services
 {
@@ -91,6 +91,64 @@ namespace Mentore.Services
                 client.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
                 client.Authenticate(_mailSettings.Mail, _mailSettings.Password);
                 await client.SendAsync(email);
+                client.Disconnect(true);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task SendEmailAppointment(AppointmentEmailDTO model, bool isCanceled = false)
+        {
+            try
+            {
+                string api, subject, body;
+                List<string> emailsToSend = new();
+                if (isCanceled)
+                {
+                    subject = $"MENTORE - HỦY LỊCH HẸN!";
+                    body = $"<h3>*Cuộc hẹn vào lúc {model.DateTime} đã bị hủy!" +
+                           $"<br/>* Tiêu đề: {model.Title}. <br/> Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
+                           $"<br/>Trân trọng, <br/>Mentore";
+
+                    emailsToSend.Add(model.MenteeEmail);
+                }    
+                else
+                {
+                    api = "http://localhost:41783/api/appointment/verify" + "?code=" + model.VerifiedCode;
+
+                    subject = $"MENTORE - CÓ LỊCH HẸN MỚI!";
+                    body = $"<h3>*Bạn có lịch hẹn vào lúc {model.DateTime} với {model.MenteeName}</h3> " +
+                           $"<br/>* Tiêu đề: {model.Title}. <br/> Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
+                           $"<br/>*Nhấn vào đây để xác nhận cuộc họp: <a href =" + api + ">Link</a>" +
+                           $"<br/>*Link cuộc họp: {model.LinkGoogleMeet} <br/>Trân trọng, <br/>Mentore";
+                }
+
+                emailsToSend.Add(model.MentorEmail);
+
+                using var client = new MailKit.Net.Smtp.SmtpClient();
+                client.Connect(_mailSettings.Host, _mailSettings.Port, SecureSocketOptions.StartTls);
+                client.Authenticate(_mailSettings.Mail, _mailSettings.Password);
+
+                foreach (var mail in emailsToSend)
+                {
+                    var builder = new BodyBuilder
+                    {
+                        HtmlBody = body
+                    };
+
+                    var email = new MimeMessage
+                    {
+                        Body = builder.ToMessageBody(),
+                        Sender = MailboxAddress.Parse(_mailSettings.Mail)
+                    };
+
+                    email.To.Add(MailboxAddress.Parse(mail));
+                    email.Subject = subject;
+                    await client.SendAsync(email);
+                }    
+            
                 client.Disconnect(true);
             }
             catch (Exception)

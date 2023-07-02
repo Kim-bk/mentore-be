@@ -5,9 +5,10 @@ using Mentore.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.DTOs.Requests;
-using Model.DTOs.Responses;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using API.Model.DTOs;
+using DAL.Entities;
 
 namespace Mentore.Controllers
 {
@@ -18,23 +19,15 @@ namespace Mentore.Controllers
     {
         private readonly IAdminService _adminService;
         private readonly IAuthService _authService;
-        private readonly IPermissionService _permissionService;
+        private readonly IRoleService _roleService;
 
-        public AdminController(IAdminService adminService, IAuthService authService
-            , IPermissionService permissionService)
+        public AdminController(IAdminService adminService, IAuthService authService, IRoleService roleService)
         {
             _adminService = adminService;
             _authService = authService;
-            _permissionService = permissionService;
+            _roleService = roleService;
         }
 
-        [Permission("MANAGE_PERMISSION")]
-        [HttpGet("credentials/{userGroupId:int}")]
-        public async Task<IActionResult> GetRolesOfUserGroup(string userGroupId)
-        {
-            var rs = await _adminService.GetRolesOfUserGroup(userGroupId);
-            return Ok(rs);
-        }
 
         [AllowAnonymous]
         [HttpPost("login")]
@@ -44,7 +37,7 @@ namespace Mentore.Controllers
             if (rs.IsSuccess)
             {
                 // 1. Get list credentials of admin
-                var listCredentials = await _permissionService.GetCredentials(rs.User.Id);
+                var listCredentials = await _roleService.GetCredentials(rs.User.Id);
 
                 // 2. Authenticate admin
                 var res = await _authService.Authenticate(rs.User, listCredentials);
@@ -57,24 +50,18 @@ namespace Mentore.Controllers
             return BadRequest(rs.ErrorMessage);
         }
 
-        [Permission("MANAGE_USER")]
-        [HttpGet("user")]
-        public async Task<List<UserDTO>> GetUsers()
+     //   [Permission("ADMIN_GET_POST")]
+        [HttpGet("post")]
+        public async Task<List<Post>> GetPosts()
         {
-            return await _adminService.GetUsers();
+            return await _adminService.GetPosts();
         }
 
-        [Permission("MANAGE_USER")]
-        [HttpPut("user")]
-        public async Task<bool> UpdateUserGroupOfUser(UserGroupUpdatedRequest req)
+       // [Permission("ACCEPT_POST")]
+        [HttpPost("post")]
+        public async Task<List<Post>> AcceptPost(PostDTO post)
         {
-            return await _adminService.UpdateUserGroupOfUser(req);
+            return await _adminService.AcceptPost(post.Id);
         }
-
-/*        [HttpGet("transaction")]
-        public async Task<List<TransactionResponse>> GetTransactions()
-        {
-            return await _adminService.GetTransactions();
-        }*/
     }
 }

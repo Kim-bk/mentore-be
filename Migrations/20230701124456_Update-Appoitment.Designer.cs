@@ -4,6 +4,7 @@ using Mentore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API.Migrations
 {
     [DbContext(typeof(MentoreContext))]
-    partial class MentoreContextModelSnapshot : ModelSnapshot
+    [Migration("20230701124456_Update-Appoitment")]
+    partial class UpdateAppoitment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -469,6 +471,60 @@ namespace API.Migrations
                     b.ToTable("Account");
                 });
 
+            modelBuilder.Entity("Mentore.Models.Credential", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActivated")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserGroupId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserGroupId");
+
+                    b.ToTable("Credential");
+                });
+
+            modelBuilder.Entity("Mentore.Models.Payment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payment");
+                });
+
             modelBuilder.Entity("Mentore.Models.RefreshToken", b =>
                 {
                     b.Property<string>("Id")
@@ -557,6 +613,21 @@ namespace API.Migrations
                     b.HasOne("Mentore.Models.UserGroup", null)
                         .WithMany("Accounts")
                         .HasForeignKey("UserGroupId");
+                });
+
+            modelBuilder.Entity("Mentore.Models.Credential", b =>
+                {
+                    b.HasOne("Mentore.Models.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
+                    b.HasOne("Mentore.Models.UserGroup", "UserGroup")
+                        .WithMany()
+                        .HasForeignKey("UserGroupId");
+
+                    b.Navigation("Role");
+
+                    b.Navigation("UserGroup");
                 });
 
             modelBuilder.Entity("Mentore.Models.RefreshToken", b =>

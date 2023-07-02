@@ -40,32 +40,14 @@ namespace Mentore.Services
             // 1. Add User Workshop
             var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == userId);
 
-            // 2. Check user workshop is already exists
-            string userWorkshopId;
-            var findUserWorkshop = await _userWorkshopRepo.FindAsync(
-                _ => _.WorkshopId == request.Id
-                && _.MenteeId == mentee.Id
-                && !_.IsDeleted);
-
-            if (findUserWorkshop == null)
+            var userWorkshop = new UserWorkshop
             {
-                var userWorkshop = new UserWorkshop
-                {
-                    MenteeId = mentee.Id,
-                    WorkshopId = request.Id,
-                    IsActived = false
-                };
+                MenteeId = mentee.Id,
+                WorkshopId = request.Id,
+                IsActived = false
+            };
 
-                userWorkshopId = userWorkshop.Id;
-                await _userWorkshopRepo.AddAsync(userWorkshop);
-            }
-            else
-            {
-                if (findUserWorkshop.IsActived)
-                    return ("Đã thanh toán!", false);
-
-                userWorkshopId = findUserWorkshop.Id;
-            }
+            await _userWorkshopRepo.AddAsync(userWorkshop);
 
             // Setting variables vnPay
             string vnp_ReturnUrl = _VNPaySettings.ReturnUrl; //URL nhan ket qua tra ve
@@ -78,7 +60,7 @@ namespace Mentore.Services
             vnpay.AddRequestData("vnp_Version", VNPayLibrary.VERSION);
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-            vnpay.AddRequestData("vnp_Amount", (request.Price * 100).ToString());
+            vnpay.AddRequestData("vnp_Amount", (Convert.ToInt32(request.Price) * 100).ToString());
             vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
             vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
@@ -86,7 +68,7 @@ namespace Mentore.Services
             vnpay.AddRequestData("vnp_OrderInfo", "Thanh toán Workshop: " + request.Title.ToUpper());
             vnpay.AddRequestData("vnp_OrderType", "string");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
-            vnpay.AddRequestData("vnp_TxnRef", userWorkshopId);
+            vnpay.AddRequestData("vnp_TxnRef", userWorkshop.Id);
 
             string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
             if (paymentUrl != "")

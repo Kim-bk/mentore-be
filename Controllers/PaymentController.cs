@@ -21,7 +21,7 @@ namespace Mentore.Controllers
             _paymentService = paymentService;
         }
 
-        [Authorize]
+        //[AllowAnonymous]
         [HttpPost("vnpay")]
         public async Task<IActionResult> VNPayCheckOut(WorkshopRequest request)
         {

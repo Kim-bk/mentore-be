@@ -7,7 +7,6 @@ namespace Mentore.Services.Interfaces
     public interface IRoleService
     {
         Task<GeneralResponse> CreateRole(string roleName);
-        Task<GeneralResponse> UpdateRole(RoleRequest req);
-        Task<GeneralResponse> DeleteRole(string roleId);
+        Task<string> GetCredentials(string userId);
     }
 }

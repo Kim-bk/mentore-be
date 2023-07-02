@@ -24,7 +24,7 @@ namespace Mentore.Commons.CustomAttribute
             // 2. Cast to list
             List<string> result = userCredentials.Split(',').ToList();
 
-            // 3. Check user credential has role
+            // 3. Check user has role
             var claim = result.Where(r => r.Equals(_role)).IsNullOrEmpty();
             if (claim)
             {

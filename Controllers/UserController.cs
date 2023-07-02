@@ -16,7 +16,6 @@ using Mentore.Services.TokenGenerators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using PagedList;
 
 namespace Mentore.Controllers
 {
@@ -27,33 +26,35 @@ namespace Mentore.Controllers
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
         private readonly RefreshTokenGenerator _refreshTokenGenerator;
-        private readonly IPermissionService _permissionService;
         private readonly IMentorService _mentorService;
         private readonly ILocationRepository _locationRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMentorRepository _mentorRepo;
         private readonly IEntityFieldRepository _entityFieldRepository;
         private readonly IFieldRepository _fieldRepo;
+        private readonly IRoleService _roleService;
 
         public UserController(IUserService userService
             , IAuthService authService
-            , RefreshTokenGenerator refreshTokenGenerator, IPermissionService permissionService
+            , RefreshTokenGenerator refreshTokenGenerator
             , IMentorService mentorService
             , ILocationRepository locationRepo
             , IMentorRepository mentorRepo
             , IFieldRepository fieldRepo
             , IEntityFieldRepository entityFieldRepository
+            , IRoleService roleService
             , IUnitOfWork unitOfWork)
         {
             _userService = userService;
             _authService = authService;
             _refreshTokenGenerator = refreshTokenGenerator;
-            _permissionService = permissionService;
             _mentorService = mentorService;
             _locationRepo = locationRepo;
             _fieldRepo = fieldRepo;
             _unitOfWork = unitOfWork;
             _entityFieldRepository = entityFieldRepository;
+            _mentorRepo = mentorRepo;
+            _roleService = roleService;
         }
 
         [Authorize]
@@ -316,10 +317,10 @@ namespace Mentore.Controllers
                 if (rs.IsSuccess)
                 {
                     // 1. Get list credentials of user
-                    //var listCredentials = await _permissionService.GetCredentials(rs.User.Id);
+                    var listCredentials = await _roleService.GetCredentials(rs.User.Id);
 
                     // 2. Authenticate user
-                    var res = await _authService.Authenticate(rs.User, String.Empty);
+                    var res = await _authService.Authenticate(rs.User, listCredentials);
                     if (res.IsSuccess)
                         return Ok(res);
                     else
@@ -350,7 +351,7 @@ namespace Mentore.Controllers
                 if (rs.IsSuccess)
                 {
                     // 1. Get list credentials of user
-                    var listCredentials = await _permissionService.GetCredentials(rs.User.Id);
+                    var listCredentials = await _roleService.GetCredentials(rs.User.Id);
 
                     // 2. Authenticate user
                     var responseTokens = await _authService.Authenticate(rs.User, listCredentials);

@@ -9,5 +9,6 @@ namespace API.Model.DTOs
         public DateTime DateStart { get; set; }
         public string MentorId { get; set; }
         public string TimeStart { get; set; }
+        public string LinkGoogleMeet { get; set; }
     }
 }

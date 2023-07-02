@@ -28,12 +28,11 @@ namespace API.Controllers
             return await _mentorService.Register(model);
         }
 
-
         [AllowAnonymous]
         [HttpGet]
         public async Task<List<MentorDTO>> GetMentors()
         {
-            return await _mentorService.GetMentors();
+           return await _mentorService.GetMentors();
         }
 
         [AllowAnonymous]
