@@ -31,10 +31,5 @@ namespace Mentore.Services.Mapping
             }    
             return listUser;
         }
-
-        public List<UserGroupDTO> MapUserGroups(List<UserGroup> userGroups)
-        {
-            return _autoMapper.Map<List<UserGroup>, List<UserGroupDTO>>(userGroups);
-        }
     }
 }

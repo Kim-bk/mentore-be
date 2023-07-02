@@ -107,14 +107,6 @@ namespace Mentore.Services
             };
         }
 
-        public async Task<bool> UpdateUserGroupOfUser(UserGroupUpdatedRequest request)
-        {
-            var user = await _userRepo.FindAsync(u => u.Id == request.UserId);
-            user.UserGroupId = request.UserGroupId;
-            await _unitOfWork.CommitTransaction();
-            return true;
-        }
-
         public async Task<List<Post>> GetPosts()
         {
             var posts = await _postRepo.GetAll();

@@ -27,7 +27,6 @@ namespace API.Services
         private readonly IMenteeRepository _menteeRepo;
         private readonly IUserWorkshopRepository _userWorkshopRepo;
         private readonly UploadImageService _uploadImageService;
-        private readonly IRepository<Counter> _counterRepo;
         private readonly IMapper _map;
 
         public WorkshopService(IUnitOfWork unitOfWork, IMapperCustom mapper
@@ -37,9 +36,8 @@ namespace API.Services
             , IFieldRepository fieldRepo
             , IEntityFieldRepository entityFieldRepo
             , UploadImageService uploadImageService
-            , IUserWorkshopRepository userWorkshopRepository
+            , IUserWorkshopRepository userWorkshopRepo
             , IMenteeRepository menteeRepo
-            , IRepository<Counter> counterRepo
             , IMapper map) : base(unitOfWork, mapper)
         {
             _workshopRepo = workshopRepo;
@@ -48,8 +46,9 @@ namespace API.Services
             _entityFieldRepo = entityFieldRepo;
             _fieldRepo = fieldRepo;
             _uploadImageService = uploadImageService;
-            _counterRepo = counterRepo;
             _map = map;
+            _menteeRepo = menteeRepo;
+            _userWorkshopRepo = userWorkshopRepo;
         }
 
         public async Task<Workshop> CreateWorkshop(WorkshopRequest model)
@@ -293,6 +292,7 @@ namespace API.Services
             {
                 var workshop = await _workshopRepo.FindAsync(_ => _.Id == userWorkshop.WorkshopId);
                 var workshopDTO = _map.Map<WorkshopDTO>(workshop);
+                workshopDTO.InvitationCode = userWorkshop.InvitationCode;
                 workshopDTO.Percentage = Math.Round((double)workshop.Participated / (double)workshop.Attendees * 100, 2);
                 workshopDTO.StartDate = DateTime
                     .ParseExact(workshop.StartDate.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture)

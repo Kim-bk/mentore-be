@@ -18,5 +18,6 @@ namespace API.Model.DTOs
         public string Location { get; set; }
         public List<Mentor> Mentors { get; set; }
         public string Fields { get; set; }
+        public string InvitationCode { get; set; }
     }
 }

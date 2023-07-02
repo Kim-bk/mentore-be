@@ -13,7 +13,6 @@ namespace Mentore.Services.Mapping
         public MappingProfile()
         {
             CreateMap<Account, UserDTO>();
-            CreateMap<UserGroup, UserGroupDTO>();
             CreateMap<Mentor, MentorDTO>()
                 .ForMember(_ => _.BirthDate, opt => opt.Ignore())
                 .ForMember(_ => _.Experiences, opt => opt.Ignore())

@@ -8,7 +8,6 @@ namespace Mentore.Services.Interfaces
     public interface IMapperCustom
     {
         List<UserDTO> MapUsers(List<Account> users);
-        List<UserGroupDTO> MapUserGroups(List<UserGroup> orders);
     }
 }
 

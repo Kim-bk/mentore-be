@@ -27,7 +27,6 @@ namespace Mentore.Models
 
         public virtual DbSet<Account> Account { get; set; }
         public virtual DbSet<Role> Role { get; set; }
-        public virtual DbSet<UserGroup> UserGroup { get; set; }
         public virtual DbSet<RefreshToken> RefreshToken { get; set; }
         public virtual DbSet<Field> Field { get; set; }
         public virtual DbSet<EntityField> EntityField { get; set; }
@@ -40,6 +39,5 @@ namespace Mentore.Models
         public virtual DbSet<Experience> Experience { get; set; }
         public virtual DbSet<UserWorkshop> UserWorkshop { get; set; }
         public virtual DbSet<SpeakerWorkshop> SpeakerWorkshop { get; set; }
-        public virtual DbSet<Counter> Counter { get; set; }
     }
 }

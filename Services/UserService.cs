@@ -56,12 +56,13 @@ namespace Mentore.Services
                     {
                         Avatar = menteeInfo.Avatar,
                         Email = menteeInfo.Email,
+                        IsMentee = true
                     };
 
                     return new UserResponse
                     {
                         IsSuccess = true,
-                        UserDTO = infoReturn
+                        UserDTO = infoReturn,
                     };
                 }
                 else
@@ -71,6 +72,7 @@ namespace Mentore.Services
                     {
                         Avatar = mentorInfo.Avatar,
                         Email = mentorInfo.Email,
+                        IsMentee = false
                     };
 
                     return new UserResponse
