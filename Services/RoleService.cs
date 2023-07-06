@@ -8,6 +8,7 @@ using Mentore.Models.DAL;
 using System.Collections.Generic;
 using Mentore.Models.DAL.Repositories;
 using System.Linq;
+using Castle.Core.Internal;
 
 namespace Mentore.Services
 {
@@ -81,6 +82,9 @@ namespace Mentore.Services
 
             // 2. Get credentials of user
             List<string> listCredentials = _roleRepo.GetQuery(_ =>_.UserGroupId == groupUserId).Select(_ => _.Name).ToList();
+            if (listCredentials.IsNullOrEmpty())
+                return string.Empty;
+
             return string.Join(",", listCredentials.ToArray());
         }
     }

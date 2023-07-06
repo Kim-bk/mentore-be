@@ -47,36 +47,35 @@ namespace API.Controllers
             return await _workshopService.GetMentorWorkshops(userId);
         }
 
-        //[Permission("CREATE_WORKSHOP")]
-        [AllowAnonymous]
+        [Permission("CREATE_WORKSHOP")]
         [HttpGet("admin")]
         public async Task<List<WorkshopDTO>> GetAdminWorkShops()
         {
             return await _workshopService.GetAllWorkshops();
         }
 
-       // [Permission("CREATE_WORKSHOP")]
+        [Permission("CREATE_WORKSHOP")]
         [HttpPost]
         public async Task<Workshop> CreateWorkshop([FromForm] WorkshopRequest model)
         {
             return await _workshopService.CreateWorkshop(model);
         }
 
-       // [Permission("UPDATE_WORKSHOP")]
+        [Permission("UPDATE_WORKSHOP")]
         [HttpPut("{id}")]
         public async Task<Workshop> UpdateWorkshop(string id, [FromForm] WorkshopRequest model)
         {
             return await _workshopService.UpdateWorkshop(model, id);
         }
 
-       // [Permission("CREATE_WORKSHOP")]
+        [Permission("CREATE_WORKSHOP")]
         [HttpGet("{id}")]
         public async Task<WorkshopDTO> GetWorkshop(string id)
         {
             return await _workshopService.GetWorkshop(id);
         }
 
-      //  [Permission("DELETE_WORKSHOP")]
+        [Permission("DELETE_WORKSHOP")]
         [HttpDelete("{id}")]
         public async Task<List<WorkshopDTO>> DeleteWorkshop(string id)
         {

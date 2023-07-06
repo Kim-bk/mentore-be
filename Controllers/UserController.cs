@@ -33,6 +33,7 @@ namespace Mentore.Controllers
         private readonly IEntityFieldRepository _entityFieldRepository;
         private readonly IFieldRepository _fieldRepo;
         private readonly IRoleService _roleService;
+        private readonly IMenteeService _menteeService;
 
         public UserController(IUserService userService
             , IAuthService authService
@@ -43,6 +44,7 @@ namespace Mentore.Controllers
             , IFieldRepository fieldRepo
             , IEntityFieldRepository entityFieldRepository
             , IRoleService roleService
+            , IMenteeService menteeService
             , IUnitOfWork unitOfWork)
         {
             _userService = userService;
@@ -55,6 +57,7 @@ namespace Mentore.Controllers
             _entityFieldRepository = entityFieldRepository;
             _mentorRepo = mentorRepo;
             _roleService = roleService;
+            _menteeService = menteeService;
         }
 
         [Authorize]
@@ -388,6 +391,22 @@ namespace Mentore.Controllers
             return BadRequest("Xác thực thất bại !");
         }
 
+        [Authorize]
+        [HttpGet("mentee")]
+        public async Task<MenteeDTO> GetMenteeData()
+        {
+            string userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return await _menteeService.GetMenteeData(userId);
+        }
+
+        [Authorize]
+        [HttpGet("mentor")]
+        public async Task<MentorDTO> GetMentorData()
+        {
+            string userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return await _mentorService.GetMentorByAccountId(userId);
+        }
+
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
         {
@@ -428,15 +447,14 @@ namespace Mentore.Controllers
 
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> UpdateAccount([FromBody] UserRequest request)
+        public async Task<bool> UpdateAccount([FromForm] UserRequest request)
         {
             var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var rs = await _userService.UpdateUser(request, userId);
             if (rs.IsSuccess)
-            {
-                return Ok("Cập nhật người dùng thành công!");
-            }
-            return BadRequest(rs.ErrorMessage);
+                return true;
+            
+            return false;
         }
     }
 }

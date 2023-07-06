@@ -50,14 +50,14 @@ namespace Mentore.Controllers
             return BadRequest(rs.ErrorMessage);
         }
 
-     //   [Permission("ADMIN_GET_POST")]
+        [Permission("ADMIN_GET_POST")]
         [HttpGet("post")]
         public async Task<List<Post>> GetPosts()
         {
             return await _adminService.GetPosts();
         }
 
-       // [Permission("ACCEPT_POST")]
+        [Permission("ACCEPT_POST")]
         [HttpPost("post")]
         public async Task<List<Post>> AcceptPost(PostDTO post)
         {

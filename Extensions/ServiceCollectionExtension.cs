@@ -69,6 +69,7 @@ namespace Mentore.Extensions
                 .AddScoped<IAdminService, AdminService>()
                 .AddScoped<IPostService, PostService>()
                 .AddScoped<IMentorService, MentorService>()
+                .AddScoped<IMenteeService, MenteeService>()
                 .AddScoped<IWorkshopService, WorkshopService>()
                 .AddScoped<IAppointmentService, AppointmentService>();
         }

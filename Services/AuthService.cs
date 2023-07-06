@@ -60,7 +60,8 @@ namespace Mentore.Services
                     IsSuccess = true,
                     AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
                     RefreshToken = refreshTokenHandler,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    UserGroup = user.UserGroupId
                 };
             }
             catch (Exception e)

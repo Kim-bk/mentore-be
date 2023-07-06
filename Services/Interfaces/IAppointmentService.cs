@@ -7,6 +7,7 @@ namespace API.Services.Interfaces
 {
     public interface IAppointmentService
     {
+        public Task<AppointmentDTO> GetAppointmentById(string appointmentId);
         public List<Appointment> GetMentorAppointments(string mentorId);
         public Task<Appointment> CreateAppointment(AppointmentDTO model, string accountId);
         public Task<Appointment> UpdateAppointment(AppointmentDTO model, string appointmentId);

@@ -6,6 +6,8 @@ using API.Services.Interfaces;
 using API.Model.DTOs;
 using Mentore.Models.DTOs.Responses;
 using API.Model.DTOs.Requests;
+using System.Security.Claims;
+using System;
 
 namespace API.Controllers
 {
@@ -47,6 +49,20 @@ namespace API.Controllers
         public async Task<List<MentorDTO>> GetMentorsByFilter([FromQuery] string filter)
         {
             return await _mentorService.GetMentorsByFilter(filter);
+        }
+
+
+        [HttpDelete("experience/{id}")]
+        public async Task<bool> DeleteExperience(string id)
+        {
+            return await _mentorService.DeleteExperience(id);
+        }
+
+        [HttpPost("experience")]
+        public async Task<bool> CreateExperience(ExperienceDTO model)
+        {
+            string userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            return await _mentorService.CreateExperience(model, userId);
         }
     }
 }

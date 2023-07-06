@@ -44,16 +44,13 @@ namespace API.Services
 
         public async Task<Appointment> CreateAppointment(AppointmentDTO model, string accountId)
         {
-            if (ValidateDateTimeStart(model.DateStart, model.TimeStart))
-                return null;
-
             var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == accountId);
            
             var appointment = new Appointment
             {
                 Title = model.Title,
                 Detail = model.Detail,
-                DateStart = model.DateStart,
+                DateStart = Convert.ToDateTime(model.DateStart),
                 MenteeId = mentee.Id,
                 MentorId = model.MentorId,
                 TimeStart = model.TimeStart,
@@ -77,19 +74,11 @@ namespace API.Services
                 VerifiedCode = appointment.VerifiedCode
             };
 
-            await _emailSender.SendEmailAppointment(emailModel);
+            await _emailSender.SendEmailAppointment(emailModel, "createAppointment");
             await _unitOfWork.CommitTransaction();
 
             return appointment;
         }
-
-        private bool ValidateDateTimeStart(DateTime dateStart, string timeStart)
-        {
-            var existedAppointment = _appointmentRepo.GetQuery(_ => _.DateStart == dateStart && _.TimeStart == timeStart && !_.IsDeleted);
-            if (existedAppointment == null) return true;
-
-            return false;
-        }    
 
         public async Task<bool> DeleteAppointment(string appointmentId)
         {
@@ -107,7 +96,7 @@ namespace API.Services
                 Details = appointment.Detail,
             };
 
-            await _emailSender.SendEmailAppointment(emailModel, true);
+            await _emailSender.SendEmailAppointment(emailModel, "cancelAppointment");
             await _unitOfWork.CommitTransaction();
             return true;
         }
@@ -140,16 +129,30 @@ namespace API.Services
 
         public async Task<Appointment> UpdateAppointment(AppointmentDTO model, string appointmentId)
         {
-            if (ValidateDateTimeStart(model.DateStart, model.TimeStart))
-                return null;
-
             var appointment = await _appointmentRepo.FindAsync(_ => _.Id == appointmentId);
-            appointment.Title = model.Title;
-            appointment.Detail = model.Detail;
-            appointment.DateStart = model.DateStart;
-            appointment.TimeStart = model.TimeStart;
+            var mentee = await _menteeRepo.FindAsync(_ => _.Id == appointment.MenteeId);
+            var mentor = await _mentorRepo.FindAsync(_ => _.Id == appointment.MentorId);
 
+            appointment.Title = model.Title ?? appointment.Title;
+            appointment.Detail = model.Detail ?? appointment.Detail;
+            appointment.DateStart = model.DateStart != null ? Convert.ToDateTime(model.DateStart) : appointment.DateStart;
+            appointment.TimeStart = model.TimeStart ?? appointment.TimeStart;
+            appointment.LinkGoogleMeet = model.LinkGoogleMeet ?? appointment.LinkGoogleMeet;
             _appointmentRepo.Update(appointment);
+            AppointmentEmailDTO emailModel = new AppointmentEmailDTO
+            { 
+                MenteeEmail = mentee.Email,
+                MentorEmail = mentor.Email,
+                Title = appointment.Title,
+                Details = appointment.Detail,
+                DateTime = $"{model.TimeStart} ngày {model.DateStart:dd/MM/yyyy}",
+                LinkGoogleMeet = appointment.LinkGoogleMeet,
+                VerifiedCode = appointment.VerifiedCode,
+                MenteeName = mentee.Name
+
+            };
+
+            await _emailSender.SendEmailAppointment(emailModel, "updateAppointment");
             await _unitOfWork.CommitTransaction();
             return appointment;
         }
@@ -164,6 +167,14 @@ namespace API.Services
             _appointmentRepo.Update(findAppointment);
             await _unitOfWork.CommitTransaction();
             return true;
+        }
+
+        public async Task<AppointmentDTO> GetAppointmentById(string appointmentId)
+        {
+            var appointment = await _appointmentRepo.FindAsync(_ => _.Id == appointmentId);
+            var appointmentDTO =  _map.Map<AppointmentDTO>(appointment);
+            appointmentDTO.DateStart = appointment.DateStart.ToString("yyy-MM-dd");
+            return appointmentDTO;
         }
     }
 }

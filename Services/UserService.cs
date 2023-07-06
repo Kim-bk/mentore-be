@@ -13,6 +13,9 @@ using Mentore.Services.Interfaces;
 using API.Model.DAL.Interfaces;
 using API.Model.Entities;
 using API.Services;
+using Microsoft.Extensions.FileProviders;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Mentore.Services
 {
@@ -22,6 +25,9 @@ namespace Mentore.Services
         private readonly IMentorRepository _mentorRepo;
         private readonly IMenteeRepository _menteeRepo;
         private readonly IRefreshTokenRepository _refreshTokenRepo;
+        private readonly IFieldRepository _fieldRepo;
+        private readonly IEntityFieldRepository _entityFieldRepo;
+        private readonly ILocationRepository _locationRepo;
         private readonly Encryptor _encryptor;
         private readonly IEmailSender _emailSender;
         private readonly IMapper _map;
@@ -32,6 +38,9 @@ namespace Mentore.Services
             , IRefreshTokenRepository refreshTokenRepossitory, IMapper map
             , UploadImageService uploadImageService
             , IMenteeRepository menteeRepo
+            , IFieldRepository fieldRepo
+            , ILocationRepository locationRepo
+            , IEntityFieldRepository entityFieldRepo
             , IMentorRepository mentorRepo) : base(unitOfWork, mapper)
         {
             _userRepo = userRepo;
@@ -40,6 +49,9 @@ namespace Mentore.Services
             _refreshTokenRepo = refreshTokenRepossitory;
             _menteeRepo = menteeRepo;
             _mentorRepo = mentorRepo;
+            _fieldRepo = fieldRepo;
+            _locationRepo = locationRepo;
+            _entityFieldRepo = entityFieldRepo;
             _map = map;
             _uploadImageService = uploadImageService;
         }
@@ -65,7 +77,7 @@ namespace Mentore.Services
                         UserDTO = infoReturn,
                     };
                 }
-                else
+                else if (user.UserGroupId == "MENTOR")
                 {
                     var mentorInfo = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
                     var infoReturn = new UserDTO
@@ -81,6 +93,13 @@ namespace Mentore.Services
                         UserDTO = infoReturn
                     };
                 }
+                else
+                {
+                    return new UserResponse
+                    {
+                        IsSuccess = true,
+                    };
+                }    
             }
             catch (Exception e)
             {
@@ -254,9 +273,10 @@ namespace Mentore.Services
                 {
                     var mentee = new Mentee
                     {
-                        Name = req.Name,
+                        AccountId = user.Id,
+                        Name = req.Name ?? string.Empty,
                         BirthDate = req.BirthDate,
-                        Avatar = "https://ui-avatars.com/api/?name=" + req.Name.ToLower().Trim()
+                        Avatar = "https://ui-avatars.com/api/?name=" + req.Email.ToLower().Trim()
                     };
 
                     await _menteeRepo.AddAsync(mentee);
@@ -269,6 +289,7 @@ namespace Mentore.Services
 
                 return new UserResponse
                 {
+                    AccountId = user.Id,
                     IsSuccess = true,
                 };
             }
@@ -325,24 +346,60 @@ namespace Mentore.Services
             {
                 var userReq = await _userRepo.FindAsync(it => it.Id == idAccount);
 
-                if (userReq == null)
-                {
-                    return new UserResponse
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = "Không tìm thấy tài khoản !",
-                    };
-                }
-                await _unitOfWork.BeginTransaction();
-
-                // Mentor
-                if (userReq.UserGroupId == "MENTOR")
-                    UpdateMentorInfo(req, idAccount);
-
                 if (userReq.UserGroupId == "MENTEE")
-                    UpdateMenteeInfo(req, idAccount);
+                {
+                    var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == idAccount);
 
-                await _unitOfWork.CommitTransaction();
+                    mentee.Name = req.Name ?? mentee.Name;
+                    mentee.PhoneNumber = req.PhoneNumber ?? mentee.PhoneNumber;
+                    mentee.StudyAt = req.StudyAt ?? mentee.StudyAt;
+                    mentee.Address = req.Address ?? mentee.Address;
+                    mentee.BirthDate = req.BirthDate != null ? Convert.ToDateTime(req.BirthDate) : mentee.BirthDate;
+                    if (req.Avatar != null)
+                        mentee.Avatar = _uploadImageService.UploadFile(req.Avatar);
+
+                    _menteeRepo.Update(mentee);
+                    await _unitOfWork.CommitTransaction();
+                }    
+                else
+                {
+                    // Mentor
+                    var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == idAccount);
+
+                    mentor.Name = req.Name ?? mentor.Name;
+                    mentor.PhoneNumber = req.PhoneNumber ?? mentor.PhoneNumber;
+                    mentor.CurrentJob = req.CurrentJob ?? mentor.CurrentJob;
+                    mentor.LocationId = req.LocationName == null ? mentor.LocationId : (await _locationRepo.FindAsync(_ => _.Name == req.LocationName)).Id;
+                    mentor.BirthDate = req.BirthDate != null ? Convert.ToDateTime(req.BirthDate) : mentor.BirthDate;
+                    if (req.Avatar != null)
+                        mentor.Avatar = _uploadImageService.UploadFile(req.Avatar);
+
+                    // Remove old mentor fields
+                    var mentorFields = _entityFieldRepo.GetQuery(_ => _.TableName == "Mentor" && !_.IsDeleted && _.TableId == mentor.Id);
+                    _entityFieldRepo.Delete(mentorFields);
+
+                    var fields = req.Fields == null ? new string[0] : req.Fields.Split(',');
+                    
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        if (string.IsNullOrEmpty(fields[i])) 
+                            continue;
+
+                        var findField = await _fieldRepo.FindAsync(_ => _.Type == fields[i].Trim());
+
+                        var mentorField = new EntityField
+                        {
+                            TableName = "Mentor",
+                            TableId = mentor.Id,
+                            FieldTypeId = findField.Id,
+                        };
+
+                        await _entityFieldRepo.AddAsync(mentorField);
+                    }
+
+                    _mentorRepo.Update(mentor);
+                    await _unitOfWork.CommitTransaction();
+                }
 
                 return new UserResponse
                 {
@@ -357,37 +414,6 @@ namespace Mentore.Services
                     ErrorMessage = e.Message,
                 };
             }
-        }
-
-        private async void UpdateMentorInfo(UserRequest model, string idAccount)
-        {
-            var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == idAccount);
-
-            mentor.Name = model.Name;
-            mentor.PhoneNumber = model.PhoneNumber;
-            mentor.CurrentJob = model.CurrentJob;
-            mentor.BirthDate = model.BirthDate;
-            mentor.Description = model.Description;
-            if (model.Avatar != null)
-                mentor.Avatar = _uploadImageService.UploadFile(model.Avatar);
-
-            _mentorRepo.Update(mentor);
-        }
-
-        private async void UpdateMenteeInfo(UserRequest model, string idAccount)
-        {
-            var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == idAccount);
-
-            mentee.Name = model.Name;
-            mentee.PhoneNumber = model.PhoneNumber;
-            mentee.StudyAt = model.StudyAt;
-            mentee.Address = model.Address;
-            mentee.BirthDate = model.BirthDate;
-            mentee.Description = model.Description;
-            if (model.Avatar != null)
-                mentee.Avatar = _uploadImageService.UploadFile(model.Avatar);
-
-            _menteeRepo.Update(mentee);
-        }     
+        }    
     }
 }

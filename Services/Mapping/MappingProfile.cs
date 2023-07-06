@@ -18,6 +18,12 @@ namespace Mentore.Services.Mapping
                 .ForMember(_ => _.Experiences, opt => opt.Ignore())
                 .ForMember(_ => _.Fields, opt => opt.Ignore())
                 .ReverseMap();
+            CreateMap<Appointment, AppointmentDTO>()
+                .ForMember(_ => _.DateStart, opt => opt.Ignore())
+                .ReverseMap();
+            CreateMap<Mentee, MenteeDTO>()
+               .ForMember(_ => _.BirthDate, opt => opt.Ignore())
+               .ReverseMap();
             CreateMap<Post, PostDTO>().ReverseMap();
             CreateMap<Workshop, WorkshopDTO>().ReverseMap();
         }

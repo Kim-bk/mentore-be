@@ -52,7 +52,7 @@ namespace API.Services
             _uploadImageService = uploadImageService;
         }
 
-        public async Task<bool> CreateMentor(MentorRequest model)
+        public async Task<bool> CreateMentor(MentorRequest model, string userId)
         {
             await _unitOfWork.BeginTransaction();
             var location = await _locationRepo.FindAsync(_ => _.Name == model.LocationName);
@@ -66,6 +66,7 @@ namespace API.Services
                 BirthDate = model.BirthDate,
                 CurrentJob = model.CurrentJob,
                 LocationId = location.Id,
+                AccountId = userId,
                 Avatar = model.File != null 
                     ? _uploadImageService.UploadFile(model.File) 
                     : "https://ui-avatars.com/api/?name=" + model.Name.ToLower().Trim()
@@ -115,12 +116,21 @@ namespace API.Services
         public async Task<MentorDTO> GetMentorById(string mentorId)
         {
             var findMentor = await _mentorRepo.FindAsync(_ => _.Id == mentorId);
+            return await ProcessHandleMentorInfo(findMentor);
+        }
+
+        public async Task<MentorDTO> GetMentorByAccountId(string userId)
+        {
+            var findMentor = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
+            return await ProcessHandleMentorInfo(findMentor);
+        }
+
+        private async Task<MentorDTO> ProcessHandleMentorInfo(Mentor findMentor)
+        {
             var mentor = _map.Map<MentorDTO>(findMentor);
             var location = await _locationRepo.FindAsync(_ => _.Id == findMentor.LocationId);
             mentor.LocationName = location.Name;
-
-            mentor.BirthDate = DateTime.ParseExact(findMentor.BirthDate.ToString(), "M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture)
-                .ToString("dd/MM/yyyy");
+            mentor.BirthDate = findMentor.BirthDate.ToString("yyy-MM-dd");
 
             // Get mentor fields
             var mentorFieldIds = _entityFieldRepo.GetQuery(
@@ -137,8 +147,8 @@ namespace API.Services
             }
 
             // Get mentor experiences
-            mentor.Experiences = _experienceRepo.GetQuery(_ => _.MentorId == mentor.Id && !_.IsDeleted).ToList();
-
+            var exps = _experienceRepo.GetQuery(_ => _.MentorId == mentor.Id && !_.IsDeleted).ToList();
+            mentor.Experiences = exps.OrderByDescending(_ => Convert.ToInt32(_.Year)).ToList();
             return mentor;
         }
 
@@ -232,7 +242,7 @@ namespace API.Services
             if (res.IsSuccess)
             {
                 // 2. Add info to mentor table
-                var isCreateSuccessMentor = await CreateMentor(model);
+                var isCreateSuccessMentor = await CreateMentor(model, res.AccountId);
                 if (!isCreateSuccessMentor)
                     return new UserResponse
                     {
@@ -247,6 +257,31 @@ namespace API.Services
         public Task<bool> UpdateMentorInfo(MentorDTO model)
         {
             throw new System.NotImplementedException();
+        }
+
+        public async Task<bool> DeleteExperience(string experienceId)
+        {
+            var exp = await _experienceRepo.FindAsync(_ => _.Id == experienceId);
+            exp.IsDeleted = true;
+            _experienceRepo.Update(exp);
+            await _unitOfWork.CommitTransaction();
+            return true;
+        }
+
+        public async Task<bool> CreateExperience(ExperienceDTO model, string userId)
+        {
+            var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
+            var exp = new Experience
+            {
+                Company = model.Company,
+                Year = model.Year,
+                Job = model.Job,
+                MentorId = mentor.Id,
+            };
+
+            await _experienceRepo.AddAsync(exp);
+            await _unitOfWork.CommitTransaction();
+            return true;
         }
     }
 }

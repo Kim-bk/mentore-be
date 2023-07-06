@@ -22,13 +22,20 @@ namespace Mentore.Commons.CustomAttribute
             var userCredentials = context.HttpContext.User.FindFirst("Credentials")?.Value;
 
             // 2. Cast to list
-            List<string> result = userCredentials.Split(',').ToList();
-
-            // 3. Check user has role
-            var claim = result.Where(r => r.Equals(_role)).IsNullOrEmpty();
-            if (claim)
+            if (userCredentials.IsNullOrEmpty())
             {
                 context.Result = new ForbidResult();
+            }
+            else
+            {
+                List<string> result = userCredentials.Split(',').ToList();
+
+                // 3. Check user has role
+                var claim = result.Where(r => r.Equals(_role)).IsNullOrEmpty();
+                if (claim)
+                {
+                    context.Result = new ForbidResult();
+                }
             }
         }
     }

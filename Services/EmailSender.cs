@@ -99,13 +99,13 @@ namespace Mentore.Services
             }
         }
 
-        public async Task SendEmailAppointment(AppointmentEmailDTO model, bool isCanceled = false)
+        public async Task SendEmailAppointment(AppointmentEmailDTO model, string action)
         {
             try
             {
                 string api, subject, body;
                 List<string> emailsToSend = new();
-                if (isCanceled)
+                if (action == "cancelAppointment")
                 {
                     subject = $"MENTORE - HỦY LỊCH HẸN!";
                     body = $"<h3>*Cuộc hẹn vào lúc {model.DateTime} đã bị hủy!" +
@@ -114,14 +114,21 @@ namespace Mentore.Services
 
                     emailsToSend.Add(model.MenteeEmail);
                 }    
-                else
+                else if (action == "createAppointment")
                 {
                     api = "http://localhost:41783/api/appointment/verify" + "?code=" + model.VerifiedCode;
 
                     subject = $"MENTORE - CÓ LỊCH HẸN MỚI!";
                     body = $"<h3>*Bạn có lịch hẹn vào lúc {model.DateTime} với {model.MenteeName}</h3> " +
-                           $"<br/>* Tiêu đề: {model.Title}. <br/> Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
+                           $"<br/>*Tiêu đề: {model.Title}. <br/>*Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
                            $"<br/>*Nhấn vào đây để xác nhận cuộc họp: <a href =" + api + ">Link</a>" +
+                           $"<br/>*Link cuộc họp: {model.LinkGoogleMeet} <br/>Trân trọng, <br/>Mentore";
+                }
+                else
+                {
+                    subject = $"MENTORE - LỊCH HẸN ĐƯỢC CẬP NHẬT!";
+                    body = $"<h3>*Bạn có lịch hẹn được cập nhật diễn ra vào lúc {model.DateTime} với {model.MenteeName}</h3> " +
+                           $"<br/>*Tiêu đề: {model.Title}. <br/>*Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
                            $"<br/>*Link cuộc họp: {model.LinkGoogleMeet} <br/>Trân trọng, <br/>Mentore";
                 }
 

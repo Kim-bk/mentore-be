@@ -6,8 +6,7 @@ namespace Mentore.Models.DTOs.Responses
     {
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
-        public int ShopId { get; set; }
-        public int Wallet { get; set; }
         public string UserId { get; set; }
+        public string UserGroup { get; set; }
     }
 }

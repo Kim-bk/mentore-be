@@ -28,6 +28,13 @@ namespace API.Controllers
             return _appointmentService.GetMentorAppointments(id);
         }
 
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<AppointmentDTO> GetAppointmentById(string id)
+        {
+            return await _appointmentService.GetAppointmentById(id);
+        }
+
         [HttpGet("user")]
         public async Task<List<Appointment>> GetUserAppointments()
         {
@@ -53,10 +60,10 @@ namespace API.Controllers
             return await _appointmentService.CreateAppointment(appointment, userId);
         }
 
-        [HttpPut("id")]
-        public async Task<Appointment> UpdateAppointment([FromQuery] string id, AppointmentDTO appointment)
+        [HttpPut("{id}")]
+        public async Task<Appointment> UpdateAppointment(string id, AppointmentDTO appointment)
         {
-            return await _appointmentService.CreateAppointment(appointment, id);
+            return await _appointmentService.UpdateAppointment(appointment, id);
         }
 
         [HttpDelete("{id}")]
