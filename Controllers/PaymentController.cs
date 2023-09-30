@@ -47,7 +47,7 @@ namespace Mentore.Controllers
         {
             var rs = await _paymentService.PaySuccess(Request.Query);
             if (rs)
-                return Redirect("http://localhost:8080");
+                return Redirect("http://localhost:8080/payment-success");
          
             return BadRequest("Thanh toán thất bại !");
         }

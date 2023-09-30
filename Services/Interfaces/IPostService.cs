@@ -9,7 +9,7 @@ namespace API.Services.Interfaces
     public interface IPostService
     {
         public Task<bool> CreatePost(PostRequest post, string userId);
-        public Task<Post> UpdatePost(PostRequest post, string postId);
+        public Task<Post> UpdatePost(PostRequest post);
         public Task<bool> DeletePost(string postId);
         public Task<List<PostDTO>> GetUserPosts(string userId);
         public Task<List<PostDTO>> GetAllPosts();

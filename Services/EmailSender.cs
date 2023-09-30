@@ -100,7 +100,7 @@ namespace Mentore.Services
         }
 
         public async Task SendEmailAppointment(AppointmentEmailDTO model, string action)
-        {
+        {   
             try
             {
                 string api, subject, body;
@@ -108,8 +108,8 @@ namespace Mentore.Services
                 if (action == "cancelAppointment")
                 {
                     subject = $"MENTORE - HỦY LỊCH HẸN!";
-                    body = $"<h3>*Cuộc hẹn vào lúc {model.DateTime} đã bị hủy!" +
-                           $"<br/>* Tiêu đề: {model.Title}. <br/> Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
+                    body = $"<h3>*Cuộc hẹn vào lúc {model.DateTime} đã bị hủy!</h3>" +
+                           $"<br/>*Tiêu đề: {model.Title}. <br/> Chi tiết: {model.Details.Replace("\n", "<br/>")}" +
                            $"<br/>Trân trọng, <br/>Mentore";
 
                     emailsToSend.Add(model.MenteeEmail);

@@ -21,7 +21,7 @@ namespace Mentore.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("data source=.\\SQLEXPRESS14;initial catalog=Mentore;Trusted_Connection=True");
+                optionsBuilder.UseSqlServer("data source=.\\SQLEXPRESS14;initial catalog=dbMentore;Trusted_Connection=True");
             }
         }
 

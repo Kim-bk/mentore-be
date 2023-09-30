@@ -276,7 +276,8 @@ namespace Mentore.Services
                         AccountId = user.Id,
                         Name = req.Name ?? string.Empty,
                         BirthDate = req.BirthDate,
-                        Avatar = "https://ui-avatars.com/api/?name=" + req.Email.ToLower().Trim()
+                        Avatar = "https://ui-avatars.com/api/?name=" + req.Email.ToLower().Trim(),
+                        Email = req.Email
                     };
 
                     await _menteeRepo.AddAsync(mentee);
@@ -369,6 +370,7 @@ namespace Mentore.Services
                     mentor.Name = req.Name ?? mentor.Name;
                     mentor.PhoneNumber = req.PhoneNumber ?? mentor.PhoneNumber;
                     mentor.CurrentJob = req.CurrentJob ?? mentor.CurrentJob;
+                    mentor.Description = req.Description ?? mentor.Description;
                     mentor.LocationId = req.LocationName == null ? mentor.LocationId : (await _locationRepo.FindAsync(_ => _.Name == req.LocationName)).Id;
                     mentor.BirthDate = req.BirthDate != null ? Convert.ToDateTime(req.BirthDate) : mentor.BirthDate;
                     if (req.Avatar != null)
@@ -378,7 +380,7 @@ namespace Mentore.Services
                     var mentorFields = _entityFieldRepo.GetQuery(_ => _.TableName == "Mentor" && !_.IsDeleted && _.TableId == mentor.Id);
                     _entityFieldRepo.Delete(mentorFields);
 
-                    var fields = req.Fields == null ? new string[0] : req.Fields.Split(',');
+                    var fields = req.Fields == null ? Array.Empty<string>() : req.Fields.Split(',');
                     
                     for (int i = 0; i < fields.Length; i++)
                     {

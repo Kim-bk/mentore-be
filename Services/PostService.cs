@@ -4,24 +4,16 @@ using API.Model.DTOs.Requests;
 using API.Services.Interfaces;
 using AutoMapper;
 using Castle.Core.Internal;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using DAL.Entities;
-using Mentore.Models;
 using Mentore.Models.DAL;
 using Mentore.Models.DAL.Repositories;
 using Mentore.Services.Base;
 using Mentore.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace API.Services
@@ -35,7 +27,8 @@ namespace API.Services
         private readonly IUserRepository _userRepo;
         private readonly UploadImageService _uploadImageService;
 
-        public PostService(IPostRepository postRepo,
+        public PostService(
+            IPostRepository postRepo,
             IMapperCustom map,
             IUnitOfWork unitOfWork,
             IMapper mapper,
@@ -181,39 +174,32 @@ namespace API.Services
             return duration + " phút trước.";
         }
 
-        public async Task<Post> UpdatePost(PostRequest post, string postId)
+        public async Task<Post> UpdatePost(PostRequest post)
         {
-            try
+            var findPost = await _postRepo.FindAsync(p => p.Id == post.Id && !p.IsDeleted);
+            if (findPost == null)
+                return null;
+
+            if (post.File != null)
             {
-                var findPost = await _postRepo.FindAsync(p => p.Id == postId && !p.IsDeleted);
-                if (findPost == null)
-                    return null;
+                var fileUrl = _uploadImageService.UploadFile(post.File);
+                if (fileUrl.IsNullOrEmpty()) return null;
 
-                if (post.File != null)
-                {
-                    var fileUrl = _uploadImageService.UploadFile(post.File);
-                    if (fileUrl.IsNullOrEmpty()) return null;
-
-                    findPost.FileUrl = fileUrl;
-                }
-
-                findPost.Title = post.Title.ToUpper() ?? findPost.Title.ToUpper();
-                findPost.Content = post.Content ?? findPost.Content;
-                findPost.UpdatedAt = DateTime.Now;
-
-                _postRepo.Update(findPost);
-                await _unitOfWork.CommitTransaction();
-                return findPost;
+                findPost.FileUrl = fileUrl;
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            findPost.Title = string.IsNullOrEmpty(post.Title) ? findPost.Title.ToUpper() : post.Title.ToUpper();
+            findPost.Content = post.Content ?? findPost.Content;
+            findPost.UpdatedAt = DateTime.Now;
+
+            _postRepo.Update(findPost);
+            await _unitOfWork.CommitTransaction();
+            return findPost;
         }
 
         public async Task<PostDTO> GetPostById(string postId)
         {
-            var post = await _postRepo.FindAsync(p => p.Id == postId);
+             var post = await _postRepo.FindAsync(p => p.Id == postId);
             return _mapper.Map<PostDTO>(post);
         }
     }

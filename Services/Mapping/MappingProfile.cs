@@ -20,6 +20,7 @@ namespace Mentore.Services.Mapping
                 .ReverseMap();
             CreateMap<Appointment, AppointmentDTO>()
                 .ForMember(_ => _.DateStart, opt => opt.Ignore())
+                .ForMember(_ => _.Duration, opt => opt.Ignore())
                 .ReverseMap();
             CreateMap<Mentee, MenteeDTO>()
                .ForMember(_ => _.BirthDate, opt => opt.Ignore())

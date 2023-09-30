@@ -76,10 +76,17 @@ namespace Mentore.Controllers
         #region Import Data
 
         [AllowAnonymous]
+        [HttpGet("test")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok("Test");
+        }
+
+        [AllowAnonymous]
         [HttpGet("field")]
         public async Task<IActionResult> GetField()
         {
-            List<string> options = new List<string>
+           List<string> options = new List<string>
             {
                 "Ngân hàng",
                 "Kế toán",

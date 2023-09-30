@@ -2,6 +2,7 @@
 using API.Model.DTOs;
 using API.Services.Interfaces;
 using AutoMapper;
+using Castle.Core.Internal;
 using DAL.Entities;
 using Mentore.Models.DAL;
 using Mentore.Models.DAL.Repositories;
@@ -42,10 +43,70 @@ namespace API.Services
             _emailSender = emailSender;
         }
 
+        private bool CheckValidAppointment(AppointmentDTO model)
+        {
+            // Check any appointment has been created for mentor or mentee in that time
+            var listMentorAppointments = _appointmentRepo.GetQuery
+                (_ => _.DateStart.Date == Convert.ToDateTime(model.DateStart).Date
+                && _.MentorId == model.MentorId
+                && !_.IsDeleted && _.IsVerified ).ToList();
+           
+            if (!listMentorAppointments.IsNullOrEmpty())
+            {
+                foreach(var appt in listMentorAppointments)
+                {
+                    if (!IsOutsideDuration(appt, model.TimeStart, model.Duration))
+                        return false;
+                }    
+            }    
+
+            var listMenteeAppointments = _appointmentRepo.GetQuery
+              (_ => _.DateStart.Date == Convert.ToDateTime(model.DateStart).Date 
+              && _.MenteeId == model.MenteeId
+              && !_.IsDeleted && _.IsVerified).ToList();
+
+            if (!listMenteeAppointments.IsNullOrEmpty())
+            {
+                foreach (var appt in listMentorAppointments)
+                {
+                    if (!IsOutsideDuration(appt, model.TimeStart, model.Duration))
+                        return false;
+                }
+            }    
+
+            return true;
+        }
+
+        private static bool IsOutsideDuration(Appointment appt, string timeStart, int duration)
+        {
+            var inpHour = Convert.ToInt32(timeStart.Split(":")[0]) * 60;
+            var inpMin = Convert.ToInt32(timeStart.Split(":")[1]);
+            var apptHour = Convert.ToInt32(appt.TimeStart.Split(":")[0]) * 60;
+            var apptMin = Convert.ToInt32(appt.TimeStart.Split(":")[1]);
+
+            var inpTotal = inpHour + inpMin;
+            var apptTotal = apptHour + apptMin;
+            if (inpTotal <= apptTotal)
+            {
+                if (apptTotal - inpTotal < duration)
+                    return false;
+            }
+            else
+            {
+                if (inpTotal - apptTotal < appt.Duration)
+                   return false;
+            }
+
+            return true;
+        }
+
         public async Task<Appointment> CreateAppointment(AppointmentDTO model, string accountId)
         {
+            if (!CheckValidAppointment(model))
+                return null;
+
             var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == accountId);
-           
+
             var appointment = new Appointment
             {
                 Title = model.Title,
@@ -56,7 +117,8 @@ namespace API.Services
                 TimeStart = model.TimeStart,
                 IsVerified = false,
                 VerifiedCode = Guid.NewGuid().ToString(),
-                LinkGoogleMeet = model.LinkGoogleMeet
+                LinkGoogleMeet = model.LinkGoogleMeet,
+                Duration = model.Duration,
             };
 
             await _appointmentRepo.AddAsync(appointment);
@@ -88,12 +150,15 @@ namespace API.Services
 
             // Send email cancel appointment
             var mentee = await _menteeRepo.FindAsync(_ => _.Id == appointment.MenteeId);
+            var mentor = await _mentorRepo.FindAsync(_ => _.Id == appointment.MentorId);
             var emailModel = new AppointmentEmailDTO
             {
                 MenteeName = mentee.Name,
                 Title = appointment.Title,
                 DateTime = $"{appointment.TimeStart} ngày {appointment.DateStart:dd/MM/yyyy}",
                 Details = appointment.Detail,
+                MenteeEmail = mentee.Email,
+                MentorEmail = mentor.Email,
             };
 
             await _emailSender.SendEmailAppointment(emailModel, "cancelAppointment");
@@ -106,29 +171,51 @@ namespace API.Services
             return _appointmentRepo.GetQuery(_ => _.MentorId == mentorId && !_.IsDeleted && _.IsVerified).ToList();
         }
 
-        public async Task<List<Appointment>> GetUserAppointment(string accountId)
+        public async Task<List<AppointmentDTO>> GetUserAppointment(string accountId)
         {
+            var rs = new List<AppointmentDTO>();
             var user = await _userRepo.FindAsync(_ => _.Id == accountId);
             if (user.UserGroupId == "MENTEE")
             {
                 // Mentee appointmentss
                 var mentee = await _menteeRepo.FindAsync(_ => _.AccountId == accountId);
-                return _appointmentRepo.GetQuery(_ => _.MenteeId == mentee.Id
-                            && !_.IsDeleted && _.IsVerified 
+                var menteeAppointments = _appointmentRepo.GetQuery(_ => _.MenteeId == mentee.Id
+                            && !_.IsDeleted && _.IsVerified
                             && _.DateStart >= DateTime.Now)
                             .OrderByDescending(_ => _.DateStart).ToList();
-            }
 
-            // Mentor appointments
-            var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == accountId);
-            return _appointmentRepo.GetQuery(_ => _.MentorId == mentor.Id 
-                        && !_.IsDeleted && _.IsVerified 
-                        && _.DateStart >= DateTime.Now)
-                        .OrderByDescending(_ => _.DateStart).ToList();
+                foreach(var appt in menteeAppointments)
+                {
+                    var apptDto = _map.Map<AppointmentDTO>(appt);
+                    apptDto.DateStart = appt.DateStart.ToString("yyyy-MM-dd");
+                    rs.Add(apptDto);
+                }    
+            }
+            if (user.UserGroupId == "MENTOR")
+            {
+                // Mentor appointments
+                var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == accountId);
+                var mentorAppointments = _appointmentRepo.GetQuery(_ => _.MentorId == mentor.Id
+                            && !_.IsDeleted && _.IsVerified
+                            && _.DateStart >= DateTime.Now)
+                            .OrderByDescending(_ => _.DateStart).ToList();
+
+                foreach (var appt in mentorAppointments)
+                {
+                    var apptDto = _map.Map<AppointmentDTO>(appt);
+                    apptDto.DateStart = appt.DateStart.ToString("yyyy-MM-dd");
+                    rs.Add(apptDto);
+                }
+            }    
+
+            return rs;
         }
 
         public async Task<Appointment> UpdateAppointment(AppointmentDTO model, string appointmentId)
         {
+            if (!CheckValidAppointment(model))
+                return null;
+
             var appointment = await _appointmentRepo.FindAsync(_ => _.Id == appointmentId);
             var mentee = await _menteeRepo.FindAsync(_ => _.Id == appointment.MenteeId);
             var mentor = await _mentorRepo.FindAsync(_ => _.Id == appointment.MentorId);
@@ -149,7 +236,6 @@ namespace API.Services
                 LinkGoogleMeet = appointment.LinkGoogleMeet,
                 VerifiedCode = appointment.VerifiedCode,
                 MenteeName = mentee.Name
-
             };
 
             await _emailSender.SendEmailAppointment(emailModel, "updateAppointment");

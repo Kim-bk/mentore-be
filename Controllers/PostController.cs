@@ -55,10 +55,10 @@ namespace API.Controllers
            return await _postService.CreatePost(post, userId);
         }
 
-        [HttpPut("{id}")]
-        public async Task<Post> UpdatePost(string id, [FromForm] PostRequest post)
+        [HttpPut]
+        public async Task<Post> UpdatePost([FromForm] PostRequest post)
         {
-            return await _postService.UpdatePost(post, id);
+            return await _postService.UpdatePost(post);
         }
     }
 }

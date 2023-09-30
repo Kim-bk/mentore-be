@@ -13,6 +13,7 @@ namespace Mentore.Models.DTOs.Requests
         public string LocationName { get; set; }
         public string StudyAt { get; set; }
         public string Fields { get; set; }
+        public string Description { get; set; }
         public IFormFile Avatar { get; set; }
     }
 }

@@ -15,5 +15,6 @@ namespace DAL.Entities
         public bool IsVerified { get; set; }
         public string MentorId { get; set; }
         public string MenteeId { get; set; }
+        public int Duration { get; set; }
     }
 }

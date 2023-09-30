@@ -36,7 +36,7 @@ namespace API.Controllers
         }
 
         [HttpGet("user")]
-        public async Task<List<Appointment>> GetUserAppointments()
+        public async Task<List<AppointmentDTO>> GetUserAppointments()
         {
             var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             return await _appointmentService.GetUserAppointment(userId);
@@ -50,14 +50,18 @@ namespace API.Controllers
             if (!verifyAppointment) 
                 return BadRequest("Xác nhận lịch hẹn thất bại!");
 
-            return Ok("Bạn đã xác nhận lịch hẹn thành công! Vào tài khoản trên Mentore để kiểm tra lịch hẹn");
+            return Redirect("http://localhost:8080/book-success");
         }
 
         [HttpPost]
-        public async Task<Appointment> CreateAppointment(AppointmentDTO appointment)
+        public async Task<IActionResult> CreateAppointment(AppointmentDTO appointment)
         {
             var userId = Convert.ToString(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            return await _appointmentService.CreateAppointment(appointment, userId);
+            var rs = await _appointmentService.CreateAppointment(appointment, userId);
+            if (rs == null)
+                return BadRequest("Khoảng thời gian đặt lịch đã bận. Xin vui lòng kiểm tra lại lịch cá nhân và của Mentor!");
+
+            return Ok("Tạo lịch hẹn thành công. Vui lòng đợi Mentor xác nhận!");
         }
 
         [HttpPut("{id}")]

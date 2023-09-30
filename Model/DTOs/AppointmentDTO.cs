@@ -14,5 +14,6 @@ namespace API.Model.DTOs
         public string VerifiedCode { get; set; }
         public bool IsVerified { get; set; }
         public string MenteeId { get; set; }
+        public int Duration { get; set; }
     }
 }

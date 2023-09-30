@@ -217,6 +217,12 @@ namespace API.Services
                 // Add speakers
                 if (!model.MentorIds.IsNullOrEmpty())
                 {
+                    // Remove old mentors
+                    var speakerWorkshop = _speakerWorkshopRepo.GetQuery(
+                        _ => _.WorkshopId == workshop.Id).ToList();
+
+                    _speakerWorkshopRepo.Delete(speakerWorkshop);
+
                     var mentorIds = model.MentorIds.Split(',');
                     var listSpeakers = new List<SpeakerWorkshop>();
                     for (int i = 0; i < mentorIds.Length; i++)
@@ -330,7 +336,7 @@ namespace API.Services
             var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
             var mentorWorkshops = _speakerWorkshopRepo.GetQuery(_ => _.MentorId == mentor.Id && !_.IsDeleted).ToList();
             var listWorkshopDTO = new List<WorkshopDTO>();
-            foreach (var userWorkshop in mentorWorkshops)
+            foreach (var userWorkshop in mentorWorkshops.DistinctBy(_ => _.WorkshopId))
             {
                 var workshop = await _workshopRepo.FindAsync(_ => _.Id == userWorkshop.WorkshopId);
                 var workshopDTO = _map.Map<WorkshopDTO>(workshop);

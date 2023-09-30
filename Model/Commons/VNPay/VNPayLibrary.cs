@@ -17,7 +17,6 @@ namespace Mentore.Commons.VNPay
         private SortedList<String, String> _requestData = new(new VnPayCompare());
         private SortedList<String, String> _responseData = new(new VnPayCompare());
 
-
         public void AddRequestData(string key, string value)
         {
             if (!String.IsNullOrEmpty(value))
@@ -46,7 +45,7 @@ namespace Mentore.Commons.VNPay
                 }
             }
 
-            var userWorkshopId = Convert.ToInt64(vnPay.GetResponseData("vnp_TxnRef"));
+            var userWorkshopId = vnPay.GetResponseData("vnp_TxnRef");
             var vnPayTranId = Convert.ToInt64(vnPay.GetResponseData("vnp_TransactionNo"));
             var vnpResponseCode = vnPay.GetResponseData("vnp_ResponseCode");
             var vnpSecureHash = collection.FirstOrDefault(k => k.Key == "vnp_SecureHash").Value; //hash của dữ liệu trả về

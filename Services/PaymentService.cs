@@ -91,6 +91,7 @@ namespace Mentore.Services
 
             var userWorkshop = await _userWorkshopRepo.FindAsync(_ => _.Id == response.UserWorkshopId);
             userWorkshop.IsActived = true;
+
             // Create invitation code for this payment
             userWorkshop.InvitationCode = GenerateRandomCode();
             _userWorkshopRepo.Update(userWorkshop);

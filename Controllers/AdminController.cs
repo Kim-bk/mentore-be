@@ -12,7 +12,7 @@ using DAL.Entities;
 
 namespace Mentore.Controllers
 {
-    [Authorize]
+ 
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : Controller
@@ -29,7 +29,6 @@ namespace Mentore.Controllers
         }
 
 
-        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {

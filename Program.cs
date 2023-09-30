@@ -15,6 +15,7 @@ builder.Services.AddCors(options =>
                       {
                           builder.WithOrigins("http://localhost:8080"
                               , "http://192.168.1.9:8080"
+                              , "https://kim-bk.github.io/mentore-fe/"
                               , "http://localhost:8000/"
                               , "http://localhost:41783")
                           .AllowAnyHeader()
@@ -34,7 +35,7 @@ builder.Configuration.AddConfiguration(configurationBuilder.Build());
 // Add services to the container.
 
 var defaultConnectionString = string.Empty;
-defaultConnectionString = builder.Configuration.GetConnectionString("LocalConnection");
+defaultConnectionString = builder.Configuration.GetConnectionString("DBConnection");
 
 builder.Services.AddDbContext<MentoreContext>(
     options =>

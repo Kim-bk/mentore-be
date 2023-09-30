@@ -54,17 +54,17 @@ namespace API.Services
 
         public async Task<bool> CreateMentor(MentorRequest model, string userId)
         {
-            await _unitOfWork.BeginTransaction();
             var location = await _locationRepo.FindAsync(_ => _.Name == model.LocationName);
 
             // 1. Create mentor
             var mentor = new Mentor
             {
-                Email = model.Email,
-                Name = model.Name,
-                PhoneNumber = model.PhoneNumber,
+                Email = model.Email ?? string.Empty,
+                Name = model.Name ?? string.Empty,
+                PhoneNumber = model.PhoneNumber ?? string.Empty,
                 BirthDate = model.BirthDate,
-                CurrentJob = model.CurrentJob,
+                CurrentJob = model.CurrentJob ?? string.Empty,
+                Description = model.Description ?? string.Empty,
                 LocationId = location.Id,
                 AccountId = userId,
                 Avatar = model.File != null 
@@ -270,6 +270,9 @@ namespace API.Services
 
         public async Task<bool> CreateExperience(ExperienceDTO model, string userId)
         {
+            if (string.IsNullOrEmpty(model.Job) || string.IsNullOrEmpty(model.Year) || string.IsNullOrEmpty(model.Company))
+                return false;
+
             var mentor = await _mentorRepo.FindAsync(_ => _.AccountId == userId);
             var exp = new Experience
             {
